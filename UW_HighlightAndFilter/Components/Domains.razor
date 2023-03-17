@@ -217,6 +217,7 @@
 
     private async void OnAppSettingsChanged()
     {
+        await LoadAppSettings();
         await InitializeFilterService();
         await LoadDomains();
         await dataGrid.Reload();
