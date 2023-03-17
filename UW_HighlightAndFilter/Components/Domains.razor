@@ -1,0 +1,210 @@
+﻿@using System.Collections.Concurrent;
+<RadzenCard>
+    <p>
+    <span>Domains: @filteredDomains/@totalDomains</span><span style="margin-left:5px">Time: @_totalSeconds.ToString("f2") sec</span>
+        </p>
+        <p>
+            <span><button class="btn" @onclick="OnLoadDomainsClick" disabled="@IsLoading">Load</button></span>
+            <span><button class="btn" @onclick="ClearDomainsList" disabled="@IsLoading">Clear</button></span>
+            <span><button class="btn" @onclick="ExportDomainsList" disabled="@IsLoading">Export</button></span>
+            <span><button class="btn" @onclick="CopyDomainsList" disabled="@IsLoading">Copy</button></span>
+        </p>
+        <p></p>
+    <RadzenDataGrid @ref="@dataGrid" RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains AllowRowSelectOnRowClick="true" SelectionMode="DataGridSelectionMode.Single" IsLoading="@IsLoading" AllowPaging="true"
+    Page="OnPageChange" AllowSorting="false" ShowPagingSummary="true" TItem="DomainItem"
+    Data="@domainItems" Density=@Density.Compact GridLines="@Radzen.DataGridGridLines.Default">
+        <Columns>
+        <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.DomainId)" Visible=false />
+        <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.Particles)" title="Domain">
+            <Template Context="dataItem">
+                    @foreach (var particleItem in dataItem.Particles)
+                    {
+                        if (particleItem.ParticleType != FilterType.None)
+                        {
+                            <span>&nbsp;</span><span style="background-color:@GetColor(particleItem.ParticleType)">@particleItem.Text</span>
+                        }
+                        else
+                        {
+                            <span>&nbsp;@particleItem.Text</span>
+                        }
+                    }
+            </Template>
+        </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+        </RadzenCard>
+
+@code {
+    IList<DomainItem> selectedDomains;
+    private RadzenDataGrid<DomainItem> dataGrid;
+    private bool IsLoading = false;
+    private int filteredDomains => domainItems.Count();
+    private int totalDomains => _domainsFileCache.Count();
+    private List<string> _domainsFileCache = new List<string>();
+    private FilterService _filterService = new FilterService();
+    private AppSettings _appSettings = null;
+    private double _totalSeconds = 0;
+    private IList<DomainItem> domainItems = new List<DomainItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await InitializeFilterService();
+        domainItems = new List<DomainItem>();
+        AppEventService.AppSettingsChanged += OnAppSettingsChanged;
+        AppEventService.DomainItemRemovedFromFavorites += OnDomainRemovedFromFavorites;
+        if (!string.IsNullOrEmpty(_appSettings.DomainsFilePath))
+        {
+            await LoadDomains();
+            await dataGrid.GoToPage(_appSettings.PageNumber);
+        }
+    }
+
+    private async Task InitializeFilterService()
+    {
+        _filterService.ClearCriterias();
+        _appSettings = await ConfigurationService.GetAppSettings();
+        foreach (var criteria in _appSettings.Criterias.Where(el => el.Enabled))
+        {
+            List<string> fileData = null;
+            PositionType type = PositionType.Contains;
+            if (criteria.Type == FilterType.FirstName)
+            {
+                type = PositionType.StartsWith;
+            }
+            if (criteria.FilePath.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (criteria.Type == FilterType.City)
+                {
+                    fileData = await FileService.ReadCsvSkipFirst(criteria.FilePath);
+                }
+                else if (criteria.Type == FilterType.State)
+                {
+                    fileData = await FileService.ReadCsvTakeFirstOnly(criteria.FilePath);
+                }
+            }
+            else
+            {
+                fileData = await FileService.ReadFile(criteria.FilePath);
+            }
+            _filterService.AddFilterCriteria(criteria.Type, type, fileData);
+        }
+        //Add Favorites to Filter them out
+        var favoriteDomain = _appSettings.FavoriteDomains.Select(el => el.DomainId);
+        _filterService.AddFilterCriteria(FilterType.Favorite, PositionType.None, favoriteDomain.ToList());
+    }
+
+    private async Task OnPageChange(PagerEventArgs args)
+    {
+        _appSettings.PageNumber = args.PageIndex;
+        await ConfigurationService.SaveFilterSettings(_appSettings, false);
+    }
+
+    private async Task OnLoadDomainsClick()
+    {
+        await SelectDomainFile();
+        await LoadDomains();
+    }
+
+    private async Task SelectDomainFile()
+    {
+        _appSettings.DomainsFilePath = FileService.SelectFile("Select file with Domains.");
+        await ConfigurationService.SaveFilterSettings(_appSettings);
+    }
+
+    private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<DomainItem> doubleClickArg)
+    {
+        var favDomainItem = doubleClickArg.Data;
+        AppEventService.TriggerDomainAddedToFavorites(favDomainItem);
+        domainItems.Remove(favDomainItem);
+        await dataGrid.Reload();
+        StateHasChanged();
+        await InitializeFilterService();
+    }
+
+    private async void OnDomainRemovedFromFavorites(DomainItem favDomainItem)
+    {
+        domainItems.Add(favDomainItem);
+        domainItems = domainItems.OrderBy(el => el.DomainId).ToList();
+        await dataGrid.Reload();
+        StateHasChanged();        
+        await InitializeFilterService();
+    }
+
+    private async Task LoadDomains()
+    {
+        IsLoading = true;
+        AppEventService.TriggerDomainFilteringStarted();
+        StateHasChanged();
+        _domainsFileCache = await FileService.ReadFile(_appSettings.DomainsFilePath);
+
+        if (_domainsFileCache != null)
+        {
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            domainItems = await FilterDomains(_domainsFileCache);
+            sw.Stop();
+            _totalSeconds = sw.Elapsed.TotalSeconds;
+        }
+        IsLoading = false;
+        StateHasChanged();
+        AppEventService.TriggerDomainFilteringEnded();
+    }
+
+    private async Task<List<DomainItem>> FilterDomains(List<string> fileData)
+    {
+        ConcurrentBag<DomainItem> domains = new ConcurrentBag<DomainItem>();
+        var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 1 };
+        await Parallel.ForEachAsync(fileData, parallelOptions,
+        (domainName, _) =>
+        {
+            var particles = _filterService.FilterDomain(domainName, _appSettings.OperatorType);
+            if (particles?.Count() > 1)
+            {
+                var domainItem = new DomainItem()
+                    {
+                        DomainId = domainName,
+                        Particles = particles
+                    };
+                domains.Add(domainItem);
+            }
+            return ValueTask.CompletedTask;
+        });
+        return domains.OrderBy(el => el.DomainId).ToList();
+    }
+
+    private async void ClearDomainsList()
+    {
+        _appSettings.DomainsFilePath = string.Empty;
+        await ConfigurationService.SaveFilterSettings(_appSettings);
+        _domainsFileCache.Clear();
+        domainItems = new List<DomainItem>();
+    }
+
+    private async Task ExportDomainsList()
+    {
+        if (domainItems != null && domainItems.Count() > 0)
+        {
+            await FileService.SaveDomains(domainItems);
+        }
+    }
+
+    private void CopyDomainsList()
+    {
+        Clipboard.SetData(DataFormats.Text, string.Join("\r\n", domainItems.Select(el => el.ToFormatedString())));
+    }
+
+    private string GetColor(FilterType type)
+    {
+        var color = _appSettings.GetColor(type);
+        return ColorTranslator.ToHtml(color);
+    }
+
+    private async void OnAppSettingsChanged()
+    {
+        await InitializeFilterService();
+        await LoadDomains();
+        await dataGrid.Reload();
+        StateHasChanged();
+    }
+}

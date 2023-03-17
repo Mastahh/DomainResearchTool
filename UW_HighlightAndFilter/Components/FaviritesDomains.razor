@@ -1,0 +1,143 @@
+﻿@using System.Collections.Concurrent;
+<RadzenCard>
+    <p>
+        <span>Favorites: @totalFavoriteDomains</span>
+        </p>
+        <p>
+            <span><button class="btn" @onclick="ClearFavoriteDomainsList" disabled="@IsLoading">Clear</button></span>
+            <span><button class="btn" @onclick="ExportFavoriteDomainsList" disabled="@IsLoading">Export</button></span>
+            <span><button class="btn" @onclick="CopyFavoriteDomainsList" disabled>Copy</button></span>
+        </p>
+        <p></p>
+    <RadzenDataGrid @ref="@dataGrid" RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true" Page="OnPageChange" AllowSorting="false" ShowPagingSummary="true" TItem="DomainItem" Data="@favoriteDomainItems" Density=@Density.Compact GridLines="@Radzen.DataGridGridLines.Default">
+        <Columns>
+        <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.DomainId)" Visible=false />
+        <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.Particles)" title="Domain">
+            <Template Context="dataItem">
+                    @foreach (var particleItem in dataItem.Particles)
+                    {
+                        if (particleItem.ParticleType != FilterType.None)
+                        {
+                            <span>&nbsp;</span><span style="background-color:@GetColor(particleItem.ParticleType)">@particleItem.Text</span>
+                        }
+                        else
+                        {
+                            <span>&nbsp;@particleItem.Text</span>
+                        }
+                    }
+            </Template>
+        </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+        </RadzenCard>
+
+@code {
+    IList<DomainItem> selectedDomains;
+    private RadzenDataGrid<DomainItem> dataGrid;
+    private bool IsLoading = false;
+    private int totalFavoriteDomains => favoriteDomainItems.Count();
+    private AppSettings _appSettings = null;
+    List<DomainItem> favoriteDomainItems = new List<DomainItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        AppEventService.AppSettingsChanged += OnAppSettingsChanged;
+        AppEventService.DomainFilteringStarted += OnDomainFilteringStarted;
+        AppEventService.DomainFilteringEnded += OnDomainFilteringEnded;
+        AppEventService.DomainItemAddedToFavorites += OnDomainAddedToFavorites;
+
+        await LoadAppSettings();
+        await LoadFavoriteDomains();
+    }
+
+    private void OnDomainFilteringStarted()
+    {
+        IsLoading = true;
+    }
+
+    private void OnDomainFilteringEnded()
+    {
+        IsLoading = false;
+    }
+
+    private async Task LoadAppSettings()
+    {
+        _appSettings = await ConfigurationService.GetAppSettings();
+        favoriteDomainItems = _appSettings.FavoriteDomains;
+    }
+
+    private async Task LoadFavoriteDomains()
+    {
+        /*
+        if (_appSettings.FavoriteDomains != null && _appSettings.FavoriteDomains.Any())
+            {
+            //await dataGrid.Reload();
+    }
+    */
+    }
+
+    private async Task OnPageChange(PagerEventArgs args)
+    {
+    }
+
+    private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<DomainItem> doubleClickArg)
+    {
+        var favDomainItem = doubleClickArg.Data;
+        favoriteDomainItems.Remove(favDomainItem);
+        _appSettings.FavoriteDomains = favoriteDomainItems;
+        await ConfigurationService.SaveFilterSettings(_appSettings, false);
+
+        await dataGrid.Reload();
+        StateHasChanged();
+
+        AppEventService.TriggerDomainRemovedFromFavorites(favDomainItem);
+    }
+
+    private async void OnDomainAddedToFavorites(DomainItem favDomainItem)
+    {
+        favoriteDomainItems.Add(favDomainItem);
+        _appSettings.FavoriteDomains = favoriteDomainItems;
+        await ConfigurationService.SaveFilterSettings(_appSettings, false);
+
+        await dataGrid.Reload();
+        StateHasChanged();
+
+    }
+
+    private async void ClearFavoriteDomainsList()
+    {
+        favoriteDomainItems = new List<DomainItem>();
+        _appSettings.FavoriteDomains = favoriteDomainItems;
+        await ConfigurationService.SaveFilterSettings(_appSettings);
+    }
+
+    private async Task ExportFavoriteDomainsList()
+    {
+        if (favoriteDomainItems != null && favoriteDomainItems.Count() > 0)
+        {
+            await FileService.SaveDomains(favoriteDomainItems);
+        }
+    }
+
+    private void CopyFavoriteDomainsList()
+    {
+        Clipboard.SetData(DataFormats.Text, string.Join("\r\n", favoriteDomainItems.Select(el => el.ToFormatedString())));
+    }
+
+    private string GetColor(FilterType type)
+    {
+        var color = _appSettings.GetColor(type);
+        return ColorTranslator.ToHtml(color);
+    }
+
+    private async void OnAppSettingsChanged()
+    {
+        await LoadAppSettings();
+        //await InitializeFilterService();
+        //await LoadDomains();
+        await dataGrid.Reload();
+        StateHasChanged();
+    }
+}
