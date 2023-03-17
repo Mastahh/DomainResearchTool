@@ -56,7 +56,10 @@
         _gridPageSize = _appSettings.GridPageSize;
 
         LoadFavoriteDomains();
-        await dataGrid.GoToPage(_appSettings.FavoritesPageNumber);
+        if (_appSettings.FavoritesPageNumber >= dataGrid.PageNumbersCount)
+        {
+            await dataGrid.GoToPage(_appSettings.FavoritesPageNumber);
+        }
     }
 
     private void OnDomainFilteringStarted()

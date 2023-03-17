@@ -61,7 +61,10 @@
         if (!string.IsNullOrEmpty(_appSettings.DomainsFilePath))
         {
             await LoadDomains();
-            await dataGrid.GoToPage(_appSettings.PageNumber);
+            if (_appSettings.PageNumber >= dataGrid.PageNumbersCount)
+            {
+                await dataGrid.GoToPage(_appSettings.PageNumber);
+            }
         }
     }
 
