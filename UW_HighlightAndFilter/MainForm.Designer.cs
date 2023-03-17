@@ -44,20 +44,27 @@
             blazorWebViewDomains = new Microsoft.AspNetCore.Components.WebView.WindowsForms.BlazorWebView();
             gbLogicSwitch = new GroupBox();
             blazorWebViewFavorites = new Microsoft.AspNetCore.Components.WebView.WindowsForms.BlazorWebView();
+            mainGrids = new TableLayoutPanel();
+            flowLayoutPanel1 = new FlowLayoutPanel();
+            tableLayoutPanel2 = new TableLayoutPanel();
+            cbGridPageSize = new ComboBox();
+            lblGridPageSize = new Label();
             gbHighlight.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             gbLogicSwitch.SuspendLayout();
+            mainGrids.SuspendLayout();
+            flowLayoutPanel1.SuspendLayout();
+            tableLayoutPanel2.SuspendLayout();
             SuspendLayout();
             // 
             // gbHighlight
             // 
-            gbHighlight.AutoSize = true;
             gbHighlight.Controls.Add(tableLayoutPanel1);
             gbHighlight.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            gbHighlight.Location = new Point(19, 16);
+            gbHighlight.Location = new Point(10, 3);
             gbHighlight.Margin = new Padding(10, 3, 3, 3);
             gbHighlight.Name = "gbHighlight";
-            gbHighlight.Size = new Size(217, 140);
+            gbHighlight.Size = new Size(209, 140);
             gbHighlight.TabIndex = 0;
             gbHighlight.TabStop = false;
             gbHighlight.Text = "Highlight";
@@ -85,7 +92,7 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
-            tableLayoutPanel1.Size = new Size(211, 112);
+            tableLayoutPanel1.Size = new Size(203, 112);
             tableLayoutPanel1.TabIndex = 1;
             // 
             // chkFirstNames
@@ -206,42 +213,105 @@
             // 
             // blazorWebViewDomains
             // 
-            blazorWebViewDomains.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            blazorWebViewDomains.Location = new Point(12, 162);
+            blazorWebViewDomains.Dock = DockStyle.Fill;
+            blazorWebViewDomains.Location = new Point(3, 157);
             blazorWebViewDomains.MinimumSize = new Size(450, 500);
             blazorWebViewDomains.Name = "blazorWebViewDomains";
-            blazorWebViewDomains.Size = new Size(453, 500);
+            blazorWebViewDomains.Size = new Size(619, 725);
             blazorWebViewDomains.TabIndex = 2;
             // 
             // gbLogicSwitch
             // 
             gbLogicSwitch.Controls.Add(radioOr);
             gbLogicSwitch.Controls.Add(radioAnd);
-            gbLogicSwitch.Location = new Point(239, 19);
+            gbLogicSwitch.Location = new Point(225, 7);
+            gbLogicSwitch.Margin = new Padding(3, 7, 3, 3);
             gbLogicSwitch.Name = "gbLogicSwitch";
-            gbLogicSwitch.Size = new Size(217, 136);
+            gbLogicSwitch.Size = new Size(100, 136);
             gbLogicSwitch.TabIndex = 3;
             gbLogicSwitch.TabStop = false;
             // 
             // blazorWebViewFavorites
             // 
-            blazorWebViewFavorites.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            blazorWebViewFavorites.Location = new Point(471, 162);
+            blazorWebViewFavorites.Dock = DockStyle.Fill;
+            blazorWebViewFavorites.Location = new Point(628, 157);
             blazorWebViewFavorites.MinimumSize = new Size(450, 500);
             blazorWebViewFavorites.Name = "blazorWebViewFavorites";
-            blazorWebViewFavorites.Size = new Size(453, 500);
+            blazorWebViewFavorites.Size = new Size(620, 725);
             blazorWebViewFavorites.TabIndex = 2;
+            // 
+            // mainGrids
+            // 
+            mainGrids.AutoSize = true;
+            mainGrids.ColumnCount = 2;
+            mainGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            mainGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            mainGrids.Controls.Add(flowLayoutPanel1, 0, 0);
+            mainGrids.Controls.Add(blazorWebViewFavorites, 1, 1);
+            mainGrids.Controls.Add(blazorWebViewDomains, 0, 1);
+            mainGrids.Controls.Add(tableLayoutPanel2, 1, 0);
+            mainGrids.Dock = DockStyle.Fill;
+            mainGrids.Location = new Point(0, 0);
+            mainGrids.Name = "mainGrids";
+            mainGrids.RowCount = 2;
+            mainGrids.RowStyles.Add(new RowStyle());
+            mainGrids.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            mainGrids.Size = new Size(1251, 885);
+            mainGrids.TabIndex = 4;
+            // 
+            // flowLayoutPanel1
+            // 
+            flowLayoutPanel1.Controls.Add(gbHighlight);
+            flowLayoutPanel1.Controls.Add(gbLogicSwitch);
+            flowLayoutPanel1.Location = new Point(3, 3);
+            flowLayoutPanel1.Name = "flowLayoutPanel1";
+            flowLayoutPanel1.Size = new Size(619, 148);
+            flowLayoutPanel1.TabIndex = 5;
+            // 
+            // tableLayoutPanel2
+            // 
+            tableLayoutPanel2.ColumnCount = 2;
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
+            tableLayoutPanel2.Controls.Add(cbGridPageSize, 1, 0);
+            tableLayoutPanel2.Controls.Add(lblGridPageSize, 0, 0);
+            tableLayoutPanel2.Location = new Point(628, 3);
+            tableLayoutPanel2.Name = "tableLayoutPanel2";
+            tableLayoutPanel2.RowCount = 2;
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
+            tableLayoutPanel2.Size = new Size(302, 100);
+            tableLayoutPanel2.TabIndex = 6;
+            // 
+            // cbGridPageSize
+            // 
+            cbGridPageSize.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbGridPageSize.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
+            cbGridPageSize.FormattingEnabled = true;
+            cbGridPageSize.Location = new Point(153, 3);
+            cbGridPageSize.Name = "cbGridPageSize";
+            cbGridPageSize.Size = new Size(130, 29);
+            cbGridPageSize.TabIndex = 4;
+            cbGridPageSize.SelectedIndexChanged += cbGridPageSize_SelectedIndexChanged;
+            // 
+            // lblGridPageSize
+            // 
+            lblGridPageSize.AutoSize = true;
+            lblGridPageSize.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
+            lblGridPageSize.Location = new Point(3, 5);
+            lblGridPageSize.Margin = new Padding(3, 5, 3, 0);
+            lblGridPageSize.Name = "lblGridPageSize";
+            lblGridPageSize.Size = new Size(111, 21);
+            lblGridPageSize.TabIndex = 5;
+            lblGridPageSize.Text = "Grid page size:";
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
-            ClientSize = new Size(1234, 760);
-            Controls.Add(gbLogicSwitch);
-            Controls.Add(blazorWebViewFavorites);
-            Controls.Add(blazorWebViewDomains);
-            Controls.Add(gbHighlight);
+            ClientSize = new Size(1251, 885);
+            Controls.Add(mainGrids);
             MinimumSize = new Size(1000, 600);
             Name = "MainForm";
             Text = "Hightlight and Filter v0.3";
@@ -250,6 +320,10 @@
             tableLayoutPanel1.ResumeLayout(false);
             gbLogicSwitch.ResumeLayout(false);
             gbLogicSwitch.PerformLayout();
+            mainGrids.ResumeLayout(false);
+            flowLayoutPanel1.ResumeLayout(false);
+            tableLayoutPanel2.ResumeLayout(false);
+            tableLayoutPanel2.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -272,5 +346,10 @@
         private Microsoft.AspNetCore.Components.WebView.WindowsForms.BlazorWebView blazorWebViewDomains;
         private GroupBox gbLogicSwitch;
         private Microsoft.AspNetCore.Components.WebView.WindowsForms.BlazorWebView blazorWebViewFavorites;
+        private TableLayoutPanel mainGrids;
+        private FlowLayoutPanel flowLayoutPanel1;
+        private TableLayoutPanel tableLayoutPanel2;
+        private ComboBox cbGridPageSize;
+        private Label lblGridPageSize;
     }
 }

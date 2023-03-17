@@ -5,8 +5,11 @@ namespace UW_HighlightAndFilter.Models
 {
     public class AppSettings
     {
+        public int GridPageSize { get; set; } = 20;
         public string DomainsFilePath { get; set; } = string.Empty;
         public int PageNumber { get; set; } = 0;
+        public int FavoritesPageNumber { get; set; } = 0;
+
         public List<DomainItem> FavoriteDomains { get; set; } = new List<DomainItem>();
         public LogicalFilterOperator OperatorType { get; set; }
         public List<FilterCriteria> Criterias { get; set; } = new List<FilterCriteria>();

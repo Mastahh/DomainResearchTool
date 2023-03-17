@@ -3,16 +3,23 @@ using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using Microsoft.Extensions.DependencyInjection;
 using Radzen;
 using UW_HighlightAndFilter.Enums;
+using UW_HighlightAndFilter.Models;
 using UW_HighlightAndFilter.Modules;
 
 namespace UW_HighlightAndFilter
 {
     public partial class MainForm : Form
     {
+        private AppSettings _appSettings;
         public MainForm()
         {
             InitializeComponent();
-            LoadAppSettings();
+            cbGridPageSize.Items.Add(10);
+            cbGridPageSize.Items.Add(20);
+            cbGridPageSize.Items.Add(30);
+            cbGridPageSize.SelectedIndex = 0;
+
+            LoadAppSettings();            
 
             var services = new ServiceCollection();
             services.AddWindowsFormsBlazorWebView();
@@ -33,12 +40,13 @@ namespace UW_HighlightAndFilter
 
         private async void LoadAppSettings()
         {
-            var filterData = await ConfigurationService.GetAppSettings();
-            if (filterData != null)
+            _appSettings = await ConfigurationService.GetAppSettings();
+
+            if (_appSettings != null)
             {
-                radioAnd.Checked = (filterData.OperatorType == LogicalFilterOperator.And);
-                radioOr.Checked = (filterData.OperatorType == LogicalFilterOperator.Or);
-                foreach (var criteria in filterData.Criterias)
+                radioAnd.Checked = (_appSettings.OperatorType == LogicalFilterOperator.And);
+                radioOr.Checked = (_appSettings.OperatorType == LogicalFilterOperator.Or);
+                foreach (var criteria in _appSettings.Criterias)
                 {
                     if (!string.IsNullOrWhiteSpace(criteria.FilePath))
                     {
@@ -47,11 +55,15 @@ namespace UW_HighlightAndFilter
                     else
                     {
                         criteria.Enabled = false;
-                        await ConfigurationService.SaveFilterSettings(filterData);
+                        await ConfigurationService.SaveFilterSettings(_appSettings);
                     }
 
                     GetCriteriaEnableControl(criteria.Type).Checked = criteria.Enabled;
                     GetCriteriaColorControl(criteria.Type).BackColor = criteria.HighlightColor;
+                }
+                if (_appSettings.GridPageSize > 0)
+                {
+                    cbGridPageSize.SelectedItem = _appSettings.GridPageSize;
                 }
             }
         }
@@ -175,6 +187,16 @@ namespace UW_HighlightAndFilter
         {
             gbHighlight.Enabled = true;
             gbLogicSwitch.Enabled = true;
+        }
+
+        private async void cbGridPageSize_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_appSettings != null)
+            {
+                _appSettings.GridPageSize = (int)cbGridPageSize.SelectedItem;
+                await ConfigurationService.SaveFilterSettings(_appSettings, false);
+                AppEventService.TriggerGridPageSizeChange(_appSettings.GridPageSize);
+            }
         }
     }
 }

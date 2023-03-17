@@ -9,7 +9,9 @@
             <span><button class="btn" @onclick="CopyFavoriteDomainsList" disabled>Copy</button></span>
         </p>
         <p></p>
-    <RadzenDataGrid @ref="@dataGrid" RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true" Page="OnPageChange" AllowSorting="false" ShowPagingSummary="true" TItem="DomainItem" Data="@favoriteDomainItems" Density=@Density.Compact GridLines="@Radzen.DataGridGridLines.Default">
+    <RadzenDataGrid @ref="@dataGrid" PageSize=@_gridPageSize RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true"
+    Page="OnPageChange" AllowSorting="false" ShowPagingSummary="true"
+    TItem="DomainItem" Data="@favoriteDomainItems" Density=@Density.Compact GridLines="@Radzen.DataGridGridLines.Default">
         <Columns>
         <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.DomainId)" Visible=false />
         <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.Particles)" title="Domain">
@@ -32,6 +34,7 @@
         </RadzenCard>
 
 @code {
+    private int _gridPageSize = 10;
     IList<DomainItem> selectedDomains;
     private RadzenDataGrid<DomainItem> dataGrid;
     private bool IsLoading = false;
@@ -47,9 +50,13 @@
         AppEventService.DomainFilteringStarted += OnDomainFilteringStarted;
         AppEventService.DomainFilteringEnded += OnDomainFilteringEnded;
         AppEventService.DomainItemAddedToFavorites += OnDomainAddedToFavorites;
+        AppEventService.GridPageSizeChanged += OnGridPageSizeChanged;
 
         await LoadAppSettings();
-        await LoadFavoriteDomains();
+        _gridPageSize = _appSettings.GridPageSize;
+
+        LoadFavoriteDomains();
+        await dataGrid.GoToPage(_appSettings.FavoritesPageNumber);
     }
 
     private void OnDomainFilteringStarted()
@@ -65,21 +72,20 @@
     private async Task LoadAppSettings()
     {
         _appSettings = await ConfigurationService.GetAppSettings();
-        favoriteDomainItems = _appSettings.FavoriteDomains;
     }
 
-    private async Task LoadFavoriteDomains()
+    private void LoadFavoriteDomains()
     {
-        /*
-        if (_appSettings.FavoriteDomains != null && _appSettings.FavoriteDomains.Any())
-            {
-            //await dataGrid.Reload();
-    }
-    */
+        favoriteDomainItems = _appSettings.FavoriteDomains;
+        IsLoading = false;
+        StateHasChanged();
+
     }
 
     private async Task OnPageChange(PagerEventArgs args)
     {
+        _appSettings.FavoritesPageNumber = args.PageIndex;
+        await ConfigurationService.SaveFilterSettings(_appSettings, false);
     }
 
     private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<DomainItem> doubleClickArg)
@@ -135,9 +141,13 @@
     private async void OnAppSettingsChanged()
     {
         await LoadAppSettings();
-        //await InitializeFilterService();
-        //await LoadDomains();
         await dataGrid.Reload();
+        StateHasChanged();
+    }
+
+    private async void OnGridPageSizeChanged(int newGridPageSize)
+    {
+        _gridPageSize = newGridPageSize;
         StateHasChanged();
     }
 }

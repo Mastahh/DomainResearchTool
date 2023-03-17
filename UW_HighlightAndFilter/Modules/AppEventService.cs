@@ -7,6 +7,7 @@ namespace UW_HighlightAndFilter.Modules
         public static event Action AppSettingsChanged;
         public static event Action DomainFilteringStarted;
         public static event Action DomainFilteringEnded;
+        public static event Action<int> GridPageSizeChanged;
         public static event Action<DomainItem> DomainItemAddedToFavorites;
         public static event Action<DomainItem> DomainItemRemovedFromFavorites;
 
@@ -33,6 +34,11 @@ namespace UW_HighlightAndFilter.Modules
         public static void TriggerDomainRemovedFromFavorites(DomainItem favoriteItem)
         {
             if (DomainItemRemovedFromFavorites != null) { DomainItemRemovedFromFavorites.Invoke(favoriteItem); }
+        }
+
+        public static void TriggerGridPageSizeChange(int newPageSize)
+        {
+            if (GridPageSizeChanged != null) { GridPageSizeChanged.Invoke(newPageSize); }
         }
     }
 }
