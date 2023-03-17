@@ -172,22 +172,21 @@
     private async Task<List<DomainItem>> FilterDomains(List<string> fileData)
     {
         ConcurrentBag<DomainItem> domains = new ConcurrentBag<DomainItem>();
+        // Not performance win, but do not lock UI
         var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 1 };
-        await Parallel.ForEachAsync(fileData, parallelOptions,
-        (domainName, _) =>
-        {
-            var particles = _filterService.FilterDomain(domainName, _appSettings.OperatorType);
-            if (particles?.Count() > 1)
+        await Parallel.ForEachAsync(fileData, parallelOptions, async (domainName, _) =>
             {
-                var domainItem = new DomainItem()
-                    {
-                        DomainId = domainName,
-                        Particles = particles
-                    };
-                domains.Add(domainItem);
-            }
-            return ValueTask.CompletedTask;
-        });
+                var particles = _filterService.FilterDomain(domainName, _appSettings.OperatorType);
+                if (particles?.Count() > 1)
+                {
+                    var domainItem = new DomainItem()
+                        {
+                            DomainId = domainName,
+                            Particles = particles
+                        };
+                    domains.Add(domainItem);
+                }
+            });
         return domains.OrderBy(el => el.DomainId).ToList();
     }
 
