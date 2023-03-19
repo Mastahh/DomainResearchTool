@@ -39,7 +39,7 @@ namespace UW_HighlightAndFilter.Modules
             if (!string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
             {
                 var fileData = await File.ReadAllLinesAsync(filePath);
-                return fileData.Select(el => el.Replace(" ", "")).ToList();
+                return fileData.Select(el => el.Replace(" ", "")).Where(el => !string.IsNullOrWhiteSpace(el)).ToList();
             }
             return new List<string>();
         }

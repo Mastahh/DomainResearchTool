@@ -1,4 +1,5 @@
-﻿using Radzen;
+﻿using System.Text.RegularExpressions;
+using Radzen;
 using UW_HighlightAndFilter.Enums;
 using UW_HighlightAndFilter.Models;
 
@@ -11,6 +12,7 @@ namespace UW_HighlightAndFilter.Modules
         private char _markerEnd = '$';
         private List<FilterRule> _filterRules = new List<FilterRule>();
         private List<string> _toSkip = new List<string>();
+        private string _regExToRemove = @"[-\s\/\\\(\)\&]";
 
         public void ClearCriterias()
         {
@@ -25,7 +27,8 @@ namespace UW_HighlightAndFilter.Modules
                 {
                     throw new Exception($"Only one criteria with type '{type}' allowed");
                 }
-                var filterWords = data.OrderByDescending(el => el.Length).Where(el => !string.IsNullOrWhiteSpace(el)).Select(el => el.Replace("-", "").Replace(" ", "").ToLower()).ToList();
+                Regex regex = new Regex(_regExToRemove, RegexOptions.IgnoreCase);
+                var filterWords = data.Where(el => !string.IsNullOrWhiteSpace(el)).Select(el => regex.Replace(el, "").ToLower()).OrderByDescending(el => el.Length).ToList();
                 if (filterType == FilterType.Favorite)
                 {
                     _toSkip.AddRange(filterWords);
@@ -48,6 +51,7 @@ namespace UW_HighlightAndFilter.Modules
                 Dictionary<string, Particle> foundWords = new Dictionary<string, Particle>();
                 int wordCount = 0;
                 var tempDomain = domain.ToLower();
+                var charsLeft = domain.LastIndexOf(".");
                 foreach (var filterRule in _filterRules.Where(el => el.Type != FilterType.Favorite))
                 {
                     if (!filterRule.Words.Any())
@@ -69,6 +73,7 @@ namespace UW_HighlightAndFilter.Modules
                                     Text = word
                                 });
                                 tempDomain = tempDomain.Replace(word, key);
+                                charsLeft -= word.Length;
                                 wordCount++;
                                 break;
                             }
@@ -83,17 +88,29 @@ namespace UW_HighlightAndFilter.Modules
                                 {
                                     ParticleType = filterRule.Type,
                                     Text = word
-                                }); ;
+                                });
                                 tempDomain = tempDomain.Replace(word, key);
+                                charsLeft -= word.Length;
                                 wordCount++;
                             }
                         }
                     }
-                    if (!found && logicalOperator == LogicalFilterOperator.And)
+                    if (logicalOperator == LogicalFilterOperator.And && !found)
                     {
                         //Do not continue search, of of criterias fails.
                         return null;
                     }
+                    if (charsLeft <= 1)
+                    {
+                        //All Found
+                        break;
+                    }
+                }
+                if (logicalOperator == LogicalFilterOperator.And)
+                {
+                    var totalCriteriasMeet = foundWords.Select(x => x.Value.ParticleType).Distinct().Count();
+                    if (totalCriteriasMeet != _filterRules.Count())
+                    { return null; }
                 }
                 if (foundWords.Count > 0)
                 {
