@@ -1,9 +1,9 @@
 ﻿using System.Text.RegularExpressions;
 using Radzen;
-using UW_HighlightAndFilter.Enums;
-using UW_HighlightAndFilter.Models;
+using DomainResearchTool.Enums;
+using DomainResearchTool.Models;
 
-namespace UW_HighlightAndFilter.Modules
+namespace DomainResearchTool.Modules
 {
     public class FilterService
     {

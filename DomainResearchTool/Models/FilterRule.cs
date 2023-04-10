@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UW_HighlightAndFilter.Enums;
+using DomainResearchTool.Enums;
 
-namespace UW_HighlightAndFilter.Models
+namespace DomainResearchTool.Models
 {
     public class FilterRule
     {

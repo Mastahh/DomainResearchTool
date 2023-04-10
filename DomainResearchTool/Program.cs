@@ -1,4 +1,4 @@
-namespace UW_HighlightAndFilter
+namespace DomainResearchTool
 {
 	internal static class Program
 	{

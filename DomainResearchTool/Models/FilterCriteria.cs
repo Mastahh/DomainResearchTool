@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
-using UW_HighlightAndFilter.Enums;
+using DomainResearchTool.Enums;
 
-namespace UW_HighlightAndFilter.Models
+namespace DomainResearchTool.Models
 {
     public class FilterCriteria
     {

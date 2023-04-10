@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UW_HighlightAndFilter.Extension
+namespace DomainResearchTool.Extension
 {
     public static class StringExtension
     {

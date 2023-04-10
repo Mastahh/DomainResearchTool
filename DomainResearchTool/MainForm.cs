@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using Microsoft.Extensions.DependencyInjection;
 using Radzen;
-using UW_HighlightAndFilter.Enums;
-using UW_HighlightAndFilter.Models;
-using UW_HighlightAndFilter.Modules;
+using DomainResearchTool.Enums;
+using DomainResearchTool.Models;
+using DomainResearchTool.Modules;
 
-namespace UW_HighlightAndFilter
+namespace DomainResearchTool
 {
     public partial class MainForm : Form
     {
@@ -19,7 +19,7 @@ namespace UW_HighlightAndFilter
             cbGridPageSize.Items.Add(30);
             cbGridPageSize.SelectedIndex = 0;
 
-            LoadAppSettings();            
+            LoadAppSettings();
 
             var services = new ServiceCollection();
             services.AddWindowsFormsBlazorWebView();

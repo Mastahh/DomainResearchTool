@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
-using UW_HighlightAndFilter.Models;
+using DomainResearchTool.Models;
 
-namespace UW_HighlightAndFilter.Modules
+namespace DomainResearchTool.Modules
 {
     public static class ConfigurationService
     {

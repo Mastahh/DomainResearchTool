@@ -1,5 +1,5 @@
 ﻿
-namespace UW_HighlightAndFilter.Enums
+namespace DomainResearchTool.Enums
 {
     public enum PositionType
     {

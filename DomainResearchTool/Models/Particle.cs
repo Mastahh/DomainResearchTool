@@ -1,7 +1,7 @@
-﻿using UW_HighlightAndFilter.Enums;
-using UW_HighlightAndFilter.Extension;
+﻿using DomainResearchTool.Enums;
+using DomainResearchTool.Extension;
 
-namespace UW_HighlightAndFilter.Models
+namespace DomainResearchTool.Models
 {
     public class Particle
     {

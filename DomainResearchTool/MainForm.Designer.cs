@@ -1,4 +1,4 @@
-﻿namespace UW_HighlightAndFilter
+﻿namespace DomainResearchTool
 {
     partial class MainForm
     {
@@ -314,7 +314,7 @@
             Controls.Add(mainGrids);
             MinimumSize = new Size(1000, 600);
             Name = "MainForm";
-            Text = "Hightlight and Filter v0.3";
+            Text = "Domain Research Tool v0.4";
             gbHighlight.ResumeLayout(false);
             gbHighlight.PerformLayout();
             tableLayoutPanel1.ResumeLayout(false);
