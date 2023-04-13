@@ -1,12 +1,12 @@
 ﻿@using System.Collections.Concurrent;
 <RadzenCard>
     <p>
-        <span>Favorites: @totalFavoriteDomains</span>
-        </p>
+        <span>Favorites: @totalFavoriteDomains</span></p>
         <p>
             <span><button class="btn" @onclick="ClearFavoriteDomainsList" disabled="@IsLoading">Clear</button></span>
             <span><button class="btn" @onclick="ExportFavoriteDomainsList" disabled="@IsLoading">Export</button></span>
-            <span><button class="btn" @onclick="CopyFavoriteDomainsList" disabled>Copy</button></span>
+            <span><button class="btn" @onclick="CopyFavoriteDomainsList" disabled="@IsLoading">Copy</button></span>
+            <span><button class="btn" @onclick="PasteToFavoriteList" disabled="@IsLoading">Paste</button></span>
         </p>
         <p></p>
     <RadzenDataGrid @ref="@dataGrid" PageSize=@_gridPageSize RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true"
@@ -106,13 +106,7 @@
 
     private async void OnDomainAddedToFavorites(DomainItem favDomainItem)
     {
-        favoriteDomainItems.Add(favDomainItem);
-        _appSettings.FavoriteDomains = favoriteDomainItems;
-        await ConfigurationService.SaveFilterSettings(_appSettings, false);
-
-        await dataGrid.Reload();
-        StateHasChanged();
-
+        await AddItemToFavoritesList(favDomainItem);
     }
 
     private async void ClearFavoriteDomainsList()
@@ -133,6 +127,36 @@
     private void CopyFavoriteDomainsList()
     {
         Clipboard.SetData(DataFormats.Text, string.Join("\r\n", favoriteDomainItems.Select(el => el.ToFormatedString())));
+    }
+
+    private async Task AddItemToFavoritesList(DomainItem favDomainItem)
+    {
+        favoriteDomainItems.Add(favDomainItem);
+        _appSettings.FavoriteDomains = favoriteDomainItems;
+        await ConfigurationService.SaveFilterSettings(_appSettings, false);
+
+        await dataGrid.Reload();
+        StateHasChanged();
+    }
+
+    private async Task PasteToFavoriteList()
+    {
+        var domainName = (string)Clipboard.GetData(DataFormats.Text) ?? "";
+        if (!DomainUtils.IsDomainValid(domainName))
+        {
+            NotificationMessageService.ShowWarningMessage($"Invalid domain '{domainName}'");
+        }
+        else
+        {
+            var particles = FilterService.Instance.FilterDomain(domainName, _appSettings.OperatorType);
+            var domainFromClipboard = new DomainItem()
+                {
+                    DomainId = domainName,
+                    ManuallyAdded = true,
+                    Particles = particles
+                };
+            await AddItemToFavoritesList(domainFromClipboard);
+        }
     }
 
     private string GetColor(FilterType type)

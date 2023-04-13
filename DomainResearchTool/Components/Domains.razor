@@ -42,7 +42,7 @@
     private int filteredDomains => domainItems.Count();
     private int totalDomains => _domainsFileCache.Count();
     private List<string> _domainsFileCache = new List<string>();
-    private FilterService _filterService = new FilterService();
+    //private FilterService _filterService = new FilterService();
     private AppSettings _appSettings = null;
     private double _totalSeconds = 0;
     private IList<DomainItem> domainItems = new List<DomainItem>();
@@ -70,7 +70,7 @@
 
     private async Task InitializeFilterService()
     {
-        _filterService.ClearCriterias();
+        FilterService.Instance.ClearCriterias();
         foreach (var criteria in _appSettings.Criterias.Where(el => el.Enabled))
         {
             List<string> fileData = null;
@@ -94,11 +94,11 @@
             {
                 fileData = await FileService.ReadFile(criteria.FilePath);
             }
-            _filterService.AddFilterCriteria(criteria.Type, type, fileData);
+            FilterService.Instance.AddFilterCriteria(criteria.Type, type, fileData);
         }
         //Add Favorites to Filter them out
         var favoriteDomain = _appSettings.FavoriteDomains.Select(el => el.DomainId);
-        _filterService.AddFilterCriteria(FilterType.Favorite, PositionType.None, favoriteDomain.ToList());
+        FilterService.Instance.AddFilterCriteria(FilterType.Favorite, PositionType.None, favoriteDomain.ToList());
     }
 
     private async Task LoadAppSettings()
@@ -142,11 +142,14 @@
 
     private async void OnDomainRemovedFromFavorites(DomainItem favDomainItem)
     {
-        domainItems.Add(favDomainItem);
-        domainItems = domainItems.OrderBy(el => el.DomainId).ToList();
-        await dataGrid.Reload();
-        StateHasChanged();        
-        await InitializeFilterService();
+        if (!favDomainItem.ManuallyAdded)
+        {
+            domainItems.Add(favDomainItem);
+            domainItems = domainItems.OrderBy(el => el.DomainId).ToList();
+            await dataGrid.Reload();
+            StateHasChanged();
+            await InitializeFilterService();
+        }
     }
 
     private async Task LoadDomains()
@@ -176,7 +179,7 @@
         var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 1 };
         await Parallel.ForEachAsync(fileData, parallelOptions, async (domainName, _) =>
             {
-                var particles = _filterService.FilterDomain(domainName, _appSettings.OperatorType);
+                var particles = FilterService.Instance.FilterDomain(domainName, _appSettings.OperatorType);
                 if (particles?.Count() > 1)
                 {
                     var domainItem = new DomainItem()

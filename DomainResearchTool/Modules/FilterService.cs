@@ -7,12 +7,27 @@ namespace DomainResearchTool.Modules
 {
     public class FilterService
     {
+        private static FilterService _instance = null;
         private static object _locker = new object();
         private char _marker = '^';
         private char _markerEnd = '$';
         private List<FilterRule> _filterRules = new List<FilterRule>();
         private List<string> _toSkip = new List<string>();
         private string _regExToRemove = @"[-\s\/\\\(\)\&]";
+
+        private FilterService() { }
+
+        public static FilterService Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new FilterService();
+                }
+                return _instance;
+            }
+        }
 
         public void ClearCriterias()
         {

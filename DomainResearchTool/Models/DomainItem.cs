@@ -13,6 +13,8 @@ namespace DomainResearchTool.Models
             Particles = new List<Particle>();
         }
 
+        public bool ManuallyAdded { get; set; } = false;
+
         public string DomainId { get; set; } = "";
         public List<Particle> Particles { get; set; }
 
