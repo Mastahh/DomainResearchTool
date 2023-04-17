@@ -1,25 +1,31 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace DomainResearchTool.Models.DataForSeo
 {
     public class TaskResultItemResponse
     {
-        [JsonPropertyName("domain")]
+        [JsonProperty("domain")]
         public string Domain { get; set; } = string.Empty;
 
-        [JsonPropertyName("created_datetime")]
+        [JsonProperty("created_datetime")]
         public DateTime CreatedDateTime { get; set; }
 
-        [JsonPropertyName("changed_datetime")]
+        [JsonProperty("changed_datetime")]
         public DateTime ChangedDateTime { get; set; }
 
-        [JsonPropertyName("expiration_datetime")]
+        [JsonProperty("expiration_datetime")]
         public DateTime ExpirationDateTime { get; set; }
 
-        [JsonPropertyName("updated_datetime")]
+        [JsonProperty("updated_datetime")]
         public DateTime UpdatedDateTime { get; set; }
 
-        [JsonPropertyName("first_seen")]
+        [JsonProperty("first_seen")]
         public DateTime FirstSeen { get; set; }
+
+        [JsonProperty("metrics")]
+        public Metrics Metrics { get; set; }
+
+        [JsonProperty("backlinks_info")]
+        public dynamic BacklinksInfo { get; set; }
     }
 }

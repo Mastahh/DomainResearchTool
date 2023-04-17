@@ -1,16 +1,16 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace DomainResearchTool.Models.DataForSeo
 {
     public class DomainWhoisOverviewRequest
     {
-        [JsonPropertyName("limit")]
+        [JsonProperty("limit")]
         public int Limit { get; set; } = 100;
 
-        [JsonPropertyName("offset")]
+        [JsonProperty("offset")]
         public int Offset { get; set; }
 
-        [JsonPropertyName("filters")]
+        [JsonProperty("filters")]
         public List<object> Filters { get; set; } = new List<object>();
     }
 }

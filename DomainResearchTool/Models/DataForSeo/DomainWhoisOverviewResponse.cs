@@ -1,19 +1,19 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace DomainResearchTool.Models.DataForSeo
 {
     public class DomainWhoisOverviewResponse
     {
-        [JsonPropertyName("version")]
+        [JsonProperty("version")]
         public string Version { get; set; } = string.Empty;
 
-        [JsonPropertyName("status_code")]
+        [JsonProperty("status_code")]
         public int StatisCode { get; set; }
 
-        [JsonPropertyName("status_message")]
+        [JsonProperty("status_message")]
         public string StatisMessage { get; set; } = string.Empty;
 
-        [JsonPropertyName("tasks")]
+        [JsonProperty("tasks")]
         public List<TaskResponse> Tasks { get; set; }
 
         public bool IsError()

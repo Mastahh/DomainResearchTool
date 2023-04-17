@@ -1,16 +1,16 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace DomainResearchTool.Models.DataForSeo
 {
     public class TaskResultResponse
     {
-        [JsonPropertyName("total_count")]
+        [JsonProperty("total_count")]
         public int TotalCount { get; set; }
 
-        [JsonPropertyName("items_count")]
+        [JsonProperty("items_count")]
         public int ItemsCount { get; set; }
 
-        [JsonPropertyName("items")]
+        [JsonProperty("items")]
         public List<TaskResultItemResponse> Items { get; set; } = new List<TaskResultItemResponse>();
 
     }
