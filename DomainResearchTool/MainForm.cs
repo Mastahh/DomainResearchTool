@@ -28,6 +28,8 @@ namespace DomainResearchTool
 
             AppEventService.DomainFilteringStarted += OnDomainFilteringStarted;
             AppEventService.DomainFilteringEnded += OnDomainFilteringEnded;
+
+            var apiSetting = ConfigurationService.GetApiSettings();
         }
 
         private void LoadWebView<TComponent>(BlazorWebView webView, ServiceCollection services)

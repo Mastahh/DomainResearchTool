@@ -7,6 +7,7 @@
             <span><button class="btn" @onclick="ExportFavoriteDomainsList" disabled="@IsLoading">Export</button></span>
             <span><button class="btn" @onclick="CopyFavoriteDomainsList" disabled="@IsLoading">Copy</button></span>
             <span><button class="btn" @onclick="PasteToFavoriteList" disabled="@IsLoading">Paste</button></span>
+            <span><button class="btn" @onclick="FetchData" disabled="@IsLoading">Fetch Data</button></span>
         </p>
         <p></p>
     <RadzenDataGrid @ref="@dataGrid" PageSize=@_gridPageSize RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true"
@@ -60,6 +61,13 @@
         {
             await dataGrid.GoToPage(_appSettings.FavoritesPageNumber);
         }
+    }
+
+    private async Task FetchData()
+    {
+        IsLoading = true;
+        await System.Threading.Tasks.Task.Delay(2000);
+        IsLoading = false;
     }
 
     private void OnDomainFilteringStarted()
@@ -141,7 +149,7 @@
 
     private async Task PasteToFavoriteList()
     {
-        var domainName = (string)Clipboard.GetData(DataFormats.Text) ?? "";
+        string domainName = (string)Clipboard.GetData(DataFormats.Text);
         if (!DomainUtils.IsDomainValid(domainName))
         {
             NotificationMessageService.ShowWarningMessage($"Invalid domain '{domainName}'");

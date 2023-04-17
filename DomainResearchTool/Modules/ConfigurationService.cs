@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using DomainResearchTool.Models;
+using System.Configuration;
 
 namespace DomainResearchTool.Modules
 {
@@ -25,6 +26,17 @@ namespace DomainResearchTool.Modules
             }
             _appSettings = JsonSerializer.Deserialize<AppSettings>(Properties.Settings.Default.AppSettings) ?? new AppSettings();
             return _appSettings;
+        }
+
+        public static ApiSettings GetApiSettings()
+        {
+            var apiSettings = new ApiSettings()
+            {
+                ApiUrl = ConfigurationManager.AppSettings["ApiUrl"] ?? "",
+                ApiLogin = ConfigurationManager.AppSettings["ApiLogin"] ?? "",
+                ApiPassword = ConfigurationManager.AppSettings["ApiPassword"] ?? "",
+            };
+            return apiSettings;
         }
     }
 }
