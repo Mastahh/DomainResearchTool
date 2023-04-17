@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace DomainResearchTool.Models
 {
@@ -11,5 +7,10 @@ namespace DomainResearchTool.Models
         public string ApiUrl { get; set; } = string.Empty;
         public string ApiLogin { get; set; } = string.Empty;
         public string ApiPassword { get; set; } = string.Empty;
+
+        public string GetBase64EncodedCredentials()
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{ApiLogin}:{ApiPassword}"));
+        }
     }
 }

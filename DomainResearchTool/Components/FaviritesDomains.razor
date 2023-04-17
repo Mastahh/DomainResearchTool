@@ -42,10 +42,13 @@
     private int totalFavoriteDomains => favoriteDomainItems.Count();
     private AppSettings _appSettings = null;
     List<DomainItem> favoriteDomainItems = new List<DomainItem>();
+    private DataForCeoApiService _dataForCeoApiService = null;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        _dataForCeoApiService = new DataForCeoApiService();
 
         AppEventService.AppSettingsChanged += OnAppSettingsChanged;
         AppEventService.DomainFilteringStarted += OnDomainFilteringStarted;
@@ -66,8 +69,12 @@
     private async Task FetchData()
     {
         IsLoading = true;
-        await System.Threading.Tasks.Task.Delay(2000);
+        var resultData = await _dataForCeoApiService.FetchWhoisData(favoriteDomainItems.Select(el => el.DomainId).ToList());
         IsLoading = false;
+        if (resultData.IsError())
+        {
+            NotificationMessageService.ShowWarningMessage(resultData.GetErrorMessage());
+        }
     }
 
     private void OnDomainFilteringStarted()
