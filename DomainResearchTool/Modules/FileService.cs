@@ -1,4 +1,5 @@
-﻿using DomainResearchTool.Models;
+﻿using DomainResearchTool.Interfaces;
+using DomainResearchTool.Models;
 
 namespace DomainResearchTool.Modules
 {
@@ -74,7 +75,7 @@ namespace DomainResearchTool.Modules
             return new List<string>();
         }
 
-        public static async Task SaveDomains(IEnumerable<DomainItem> domainItems)
+        public static async Task SaveDomains(IEnumerable<IDomainItem> domainItems)
         {
             saveFileDialog.DefaultExt = "*.txt";
             saveFileDialog.Filter = openFileDialog.Filter = "Text files (*.txt)|*.txt";

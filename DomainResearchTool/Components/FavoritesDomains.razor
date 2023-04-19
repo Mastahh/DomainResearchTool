@@ -10,13 +10,13 @@
             <span><button class="btn" @onclick="FetchData" disabled="@IsLoading">Fetch Data</button></span>
         </p>
         <p></p>
-    <RadzenDataGrid @ref="@dataGrid" PageSize=@_gridPageSize RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true"
+    <RadzenDataGrid @ref="@dataGrid" AllowColumnResize="true" PageSize=@_gridPageSize RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true"
     Page="OnPageChange" AllowSorting="false" ShowPagingSummary="true"
-    TItem="DomainItem" Data="@favoriteDomainItems" Density=@Density.Compact GridLines="@Radzen.DataGridGridLines.Default">
+    TItem="FavoritesDomainItem" Data="@favoriteDomainItems" Density=@Density.Compact GridLines="@Radzen.DataGridGridLines.Default">
         <Columns>
-        <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.DomainId)" Visible=false />
-        <RadzenDataGridColumn TItem="DomainItem" Property="@nameof(DomainItem.Particles)" title="Domain">
-            <Template Context="dataItem">
+            <RadzenDataGridColumn TItem="FavoritesDomainItem" Property="@nameof(FavoritesDomainItem.DomainId)" Visible=false />
+            <RadzenDataGridColumn TItem="FavoritesDomainItem" Width="200" MinWidth="100" Property="@nameof(FavoritesDomainItem.Particles)" title="Domain">
+                <Template Context="dataItem">
                     @foreach (var particleItem in dataItem.Particles)
                     {
                         if (particleItem.ParticleType != FilterType.None)
@@ -28,20 +28,32 @@
                             <span>&nbsp;@particleItem.Text</span>
                         }
                     }
-            </Template>
-        </RadzenDataGridColumn>
+                  </Template>
+            </RadzenDataGridColumn>
+            @foreach(var columnName in _extraColumns)
+            {
+                <RadzenDataGridColumn TItem="FavoritesDomainItem" title="@columnName.ToPrettyCase()">
+                    <Template Context="dataItem">
+                        @if (dataItem.ExtraColumns.ContainsKey(columnName))
+                        {
+                            <span>&nbsp;@dataItem.ExtraColumns[columnName]</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+            }
         </Columns>
     </RadzenDataGrid>
-        </RadzenCard>
+</RadzenCard>
 
 @code {
     private int _gridPageSize = 10;
-    IList<DomainItem> selectedDomains;
-    private RadzenDataGrid<DomainItem> dataGrid;
+    IList<string> _extraColumns = new List<string>();
+    IList<FavoritesDomainItem> selectedDomains;
+    private RadzenDataGrid<FavoritesDomainItem> dataGrid;
     private bool IsLoading = false;
     private int totalFavoriteDomains => favoriteDomainItems.Count();
     private AppSettings _appSettings = null;
-    List<DomainItem> favoriteDomainItems = new List<DomainItem>();
+    List<FavoritesDomainItem> favoriteDomainItems = new List<FavoritesDomainItem>();
     private DataForCeoApiService _dataForCeoApiService = null;
 
     protected override async Task OnInitializedAsync()
@@ -74,6 +86,44 @@
         if (resultData.IsError())
         {
             NotificationMessageService.ShowWarningMessage(resultData.GetErrorMessage());
+            return;
+        }
+        var task = resultData.Tasks.FirstOrDefault();
+        if (task == null)
+        {
+            NotificationMessageService.ShowWarningMessage($"Task not found.");
+            return;
+        }
+        var result = task.Result.FirstOrDefault();
+        if (result == null)
+        {
+            NotificationMessageService.ShowWarningMessage($"Task.Result not found.");
+            return;
+        }
+        _extraColumns.Clear();
+        foreach (var item in result.Items)
+        {
+            //var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == item.Domain);
+            var favoriteDomain = favoriteDomainItems.FirstOrDefault();
+            var columnName = nameof(item.UpdatedDateTime);
+            favoriteDomain.ExtraColumns.Add(nameof(item.UpdatedDateTime), item.UpdatedDateTime.ToString("G"));
+            AddExtraColumn(columnName);
+            foreach (var property in item.Metrics.Organic.GetType().GetProperties())
+            {
+                columnName = property.Name;
+                var value = property.GetValue(item.Metrics.Organic);
+                favoriteDomain.ExtraColumns.Add(columnName, value == null ? "0" : value.ToString());
+                AddExtraColumn(columnName);
+
+            }
+            break;
+        }
+    }
+    private void AddExtraColumn(string columnName)
+    {
+        if (!_extraColumns.Contains(columnName))
+        {
+            _extraColumns.Add(columnName);
         }
     }
 
@@ -106,7 +156,7 @@
         await ConfigurationService.SaveFilterSettings(_appSettings, false);
     }
 
-    private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<DomainItem> doubleClickArg)
+    private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<FavoritesDomainItem> doubleClickArg)
     {
         var favDomainItem = doubleClickArg.Data;
         favoriteDomainItems.Remove(favDomainItem);
@@ -121,12 +171,12 @@
 
     private async void OnDomainAddedToFavorites(DomainItem favDomainItem)
     {
-        await AddItemToFavoritesList(favDomainItem);
+        await AddItemToFavoritesList((FavoritesDomainItem)favDomainItem);
     }
 
     private async void ClearFavoriteDomainsList()
     {
-        favoriteDomainItems = new List<DomainItem>();
+        favoriteDomainItems = new List<FavoritesDomainItem>();
         _appSettings.FavoriteDomains = favoriteDomainItems;
         await ConfigurationService.SaveFilterSettings(_appSettings);
     }
@@ -144,7 +194,7 @@
         Clipboard.SetData(DataFormats.Text, string.Join("\r\n", favoriteDomainItems.Select(el => el.ToFormatedString())));
     }
 
-    private async Task AddItemToFavoritesList(DomainItem favDomainItem)
+    private async Task AddItemToFavoritesList(FavoritesDomainItem favDomainItem)
     {
         favoriteDomainItems.Add(favDomainItem);
         _appSettings.FavoriteDomains = favoriteDomainItems;
@@ -164,7 +214,7 @@
         else
         {
             var particles = FilterService.Instance.FilterDomain(domainName, _appSettings.OperatorType);
-            var domainFromClipboard = new DomainItem()
+            var domainFromClipboard = new FavoritesDomainItem()
                 {
                     DomainId = domainName,
                     ManuallyAdded = true,

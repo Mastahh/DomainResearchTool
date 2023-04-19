@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DomainResearchTool.Interfaces;
 
 namespace DomainResearchTool.Models
 {
-    public class DomainItem
+    public class DomainItem : IDomainItem
     {
         public DomainItem()
         {

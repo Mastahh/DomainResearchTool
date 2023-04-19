@@ -24,7 +24,7 @@ namespace DomainResearchTool
             var services = new ServiceCollection();
             services.AddWindowsFormsBlazorWebView();
             LoadWebView<Components.Domains>(blazorWebViewDomains, services);
-            LoadWebView<Components.FaviritesDomains>(blazorWebViewFavorites, services);
+            LoadWebView<Components.FavoritesDomains>(blazorWebViewFavorites, services);
 
             AppEventService.DomainFilteringStarted += OnDomainFilteringStarted;
             AppEventService.DomainFilteringEnded += OnDomainFilteringEnded;

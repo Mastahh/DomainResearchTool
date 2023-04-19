@@ -217,7 +217,7 @@
             blazorWebViewDomains.Location = new Point(3, 157);
             blazorWebViewDomains.MinimumSize = new Size(450, 500);
             blazorWebViewDomains.Name = "blazorWebViewDomains";
-            blazorWebViewDomains.Size = new Size(619, 725);
+            blazorWebViewDomains.Size = new Size(450, 690);
             blazorWebViewDomains.TabIndex = 2;
             // 
             // gbLogicSwitch
@@ -234,18 +234,18 @@
             // blazorWebViewFavorites
             // 
             blazorWebViewFavorites.Dock = DockStyle.Fill;
-            blazorWebViewFavorites.Location = new Point(628, 157);
+            blazorWebViewFavorites.Location = new Point(453, 157);
             blazorWebViewFavorites.MinimumSize = new Size(450, 500);
             blazorWebViewFavorites.Name = "blazorWebViewFavorites";
-            blazorWebViewFavorites.Size = new Size(620, 725);
+            blazorWebViewFavorites.Size = new Size(795, 690);
             blazorWebViewFavorites.TabIndex = 2;
             // 
             // mainGrids
             // 
             mainGrids.AutoSize = true;
             mainGrids.ColumnCount = 2;
-            mainGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            mainGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            mainGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 450F));
+            mainGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             mainGrids.Controls.Add(flowLayoutPanel1, 0, 0);
             mainGrids.Controls.Add(blazorWebViewFavorites, 1, 1);
             mainGrids.Controls.Add(blazorWebViewDomains, 0, 1);
@@ -256,7 +256,7 @@
             mainGrids.RowCount = 2;
             mainGrids.RowStyles.Add(new RowStyle());
             mainGrids.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainGrids.Size = new Size(1251, 885);
+            mainGrids.Size = new Size(1251, 850);
             mainGrids.TabIndex = 4;
             // 
             // flowLayoutPanel1
@@ -265,17 +265,17 @@
             flowLayoutPanel1.Controls.Add(gbLogicSwitch);
             flowLayoutPanel1.Location = new Point(3, 3);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(619, 148);
+            flowLayoutPanel1.Size = new Size(365, 148);
             flowLayoutPanel1.TabIndex = 5;
             // 
             // tableLayoutPanel2
             // 
             tableLayoutPanel2.ColumnCount = 2;
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 152F));
             tableLayoutPanel2.Controls.Add(cbGridPageSize, 1, 0);
             tableLayoutPanel2.Controls.Add(lblGridPageSize, 0, 0);
-            tableLayoutPanel2.Location = new Point(628, 3);
+            tableLayoutPanel2.Location = new Point(453, 3);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
             tableLayoutPanel2.RowCount = 2;
             tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
@@ -310,9 +310,9 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
-            ClientSize = new Size(1251, 885);
+            ClientSize = new Size(1251, 850);
             Controls.Add(mainGrids);
-            MinimumSize = new Size(1000, 600);
+            MinimumSize = new Size(1000, 598);
             Name = "MainForm";
             Text = "Domain Research Tool v0.4";
             gbHighlight.ResumeLayout(false);

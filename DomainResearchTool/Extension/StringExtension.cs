@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DomainResearchTool.Extension
+﻿namespace DomainResearchTool.Extension
 {
     public static class StringExtension
     {

@@ -10,7 +10,7 @@ namespace DomainResearchTool.Models
         public int PageNumber { get; set; } = 0;
         public int FavoritesPageNumber { get; set; } = 0;
 
-        public List<DomainItem> FavoriteDomains { get; set; } = new List<DomainItem>();
+        public List<FavoritesDomainItem> FavoriteDomains { get; set; } = new List<FavoritesDomainItem>();
         public LogicalFilterOperator OperatorType { get; set; }
         public List<FilterCriteria> Criterias { get; set; } = new List<FilterCriteria>();
         private Dictionary<FilterType, Color> _colorMap = new Dictionary<FilterType, Color>();
