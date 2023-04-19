@@ -15,7 +15,7 @@
     TItem="FavoritesDomainItem" Data="@favoriteDomainItems" Density=@Density.Compact GridLines="@Radzen.DataGridGridLines.Default">
         <Columns>
             <RadzenDataGridColumn TItem="FavoritesDomainItem" Property="@nameof(FavoritesDomainItem.DomainId)" Visible=false />
-            <RadzenDataGridColumn TItem="FavoritesDomainItem" Width="200" MinWidth="100" Property="@nameof(FavoritesDomainItem.Particles)" title="Domain">
+            <RadzenDataGridColumn TItem="FavoritesDomainItem" Width="200px" Property="@nameof(FavoritesDomainItem.Particles)" title="Domain">
                 <Template Context="dataItem">
                     @foreach (var particleItem in dataItem.Particles)
                     {
@@ -103,8 +103,8 @@
         _extraColumns.Clear();
         foreach (var item in result.Items)
         {
-            //var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == item.Domain);
-            var favoriteDomain = favoriteDomainItems.FirstOrDefault();
+            var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == item.Domain);
+            //var favoriteDomain = favoriteDomainItems.FirstOrDefault();
             if (favoriteDomain != null)
             {
                 SetExtraColumnValue(favoriteDomain, nameof(item.UpdatedDateTime), item.UpdatedDateTime.ToString("G"));
@@ -113,7 +113,6 @@
 
                 PopulateExtraColumns(item.BacklinksInfo, favoriteDomain);
             }
-            break;
         }
         _appSettings.FavoriteDomains = favoriteDomainItems;
         await ConfigurationService.SaveFilterSettings(_appSettings);
