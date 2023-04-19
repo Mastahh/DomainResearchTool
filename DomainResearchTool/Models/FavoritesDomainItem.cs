@@ -10,5 +10,17 @@ namespace DomainResearchTool.Models
         {
             return string.Join(",", new List<string>() { DomainId }.Concat(ExtraColumns.Values));
         }
+
+        public void SetExtraColumnValue(string key, string value)
+        {
+            if (!ExtraColumns.ContainsKey(key))
+            {
+                ExtraColumns.Add(key, value);
+            }
+            else
+            {
+                ExtraColumns[key] = value;
+            }
+        }
     }
 }

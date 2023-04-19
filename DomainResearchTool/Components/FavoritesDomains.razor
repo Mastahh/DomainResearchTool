@@ -30,7 +30,7 @@
                     }
                   </Template>
             </RadzenDataGridColumn>
-            @foreach(var columnName in _extraColumns)
+            @foreach (var columnName in _extraColumns)
             {
                 <RadzenDataGridColumn TItem="FavoritesDomainItem" title="@columnName.ToPrettyCase()">
                     <Template Context="dataItem">
@@ -105,22 +105,35 @@
         {
             //var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == item.Domain);
             var favoriteDomain = favoriteDomainItems.FirstOrDefault();
-            var columnName = nameof(item.UpdatedDateTime);
-            favoriteDomain.ExtraColumns.Add(nameof(item.UpdatedDateTime), item.UpdatedDateTime.ToString("G"));
-            AddExtraColumn(columnName);
-            foreach (var property in item.Metrics.Organic.GetType().GetProperties())
+            if (favoriteDomain != null)
             {
-                columnName = property.Name;
-                var value = property.GetValue(item.Metrics.Organic);
-                favoriteDomain.ExtraColumns.Add(columnName, value == null ? "0" : value.ToString());
-                AddExtraColumn(columnName);
+                SetExtraColumnValue(favoriteDomain, nameof(item.UpdatedDateTime), item.UpdatedDateTime.ToString("G"));
 
+                PopulateExtraColumns(item.Metrics.Organic, favoriteDomain);
+
+                PopulateExtraColumns(item.BacklinksInfo, favoriteDomain);
             }
             break;
         }
+        _appSettings.FavoriteDomains = favoriteDomainItems;
+        await ConfigurationService.SaveFilterSettings(_appSettings);
     }
-    private void AddExtraColumn(string columnName)
+
+    private void PopulateExtraColumns<TModel>(TModel source, FavoritesDomainItem domainItem)
     {
+        if (source != null)
+        {
+            foreach (var property in source.GetType().GetProperties())
+            {
+                var value = property.GetValue(source);
+                SetExtraColumnValue(domainItem, property.Name, value == null ? "0" : value.ToString());
+            }
+        }
+    }
+
+    private void SetExtraColumnValue(FavoritesDomainItem domainItem, string columnName, string value)
+    {
+        domainItem.SetExtraColumnValue(columnName, value);
         if (!_extraColumns.Contains(columnName))
         {
             _extraColumns.Add(columnName);
@@ -145,6 +158,10 @@
     private void LoadFavoriteDomains()
     {
         favoriteDomainItems = _appSettings.FavoriteDomains;
+        if (favoriteDomainItems.FirstOrDefault() != null)
+        {
+            _extraColumns = favoriteDomainItems.FirstOrDefault().ExtraColumns.Keys.ToList();
+        }
         IsLoading = false;
         StateHasChanged();
 

@@ -26,6 +26,6 @@ namespace DomainResearchTool.Models.DataForSeo
         public Metrics Metrics { get; set; }
 
         [JsonProperty("backlinks_info")]
-        public dynamic BacklinksInfo { get; set; }
+        public TaskBacklinksInfo BacklinksInfo { get; set; }
     }
 }

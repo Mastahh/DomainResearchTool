@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using DomainResearchTool.Models;
 using System.Configuration;
+using Newtonsoft.Json;
 
 namespace DomainResearchTool.Modules
 {
@@ -10,7 +11,7 @@ namespace DomainResearchTool.Modules
         public static async Task SaveFilterSettings(AppSettings updatedAppSettings, bool triggerEvent = true)
         {
             _appSettings = updatedAppSettings;
-            Properties.Settings.Default.AppSettings = JsonSerializer.Serialize(_appSettings);
+            Properties.Settings.Default.AppSettings = JsonConvert.SerializeObject(_appSettings);
             await Task.Run(() => { Properties.Settings.Default.Save(); });
             if (triggerEvent)
             {
@@ -24,7 +25,7 @@ namespace DomainResearchTool.Modules
                 _appSettings = new AppSettings();
                 await SaveFilterSettings(_appSettings);
             }
-            _appSettings = JsonSerializer.Deserialize<AppSettings>(Properties.Settings.Default.AppSettings) ?? new AppSettings();
+            _appSettings = JsonConvert.DeserializeObject<AppSettings>(Properties.Settings.Default.AppSettings) ?? new AppSettings();
             return _appSettings;
         }
 
