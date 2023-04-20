@@ -8,6 +8,7 @@
             <span><button class="btn" @onclick="CopyFavoriteDomainsList" disabled="@IsLoading">Copy</button></span>
             <span><button class="btn" @onclick="PasteToFavoriteList" disabled="@IsLoading">Paste</button></span>
             <span><button class="btn" @onclick="FetchData" disabled="@IsLoading">Fetch Data</button></span>
+            <span><button class="btn" @onclick="YoutubeSearch" disabled="@IsLoading">YT Search</button></span>
         </p>
         <p></p>
     <RadzenDataGrid @ref="@dataGrid" AllowColumnResize="true" PageSize=@_gridPageSize RowDoubleClick="OnRowDoubleClick" @bind-Value=@selectedDomains IsLoading="@IsLoading" AllowPaging="true"
@@ -78,33 +79,34 @@
         }
     }
 
+    private async Task YoutubeSearch()
+    {
+        IsLoading = true;
+        var resultData = await _dataForCeoApiService.FetchYoutubeData(favoriteDomainItems.Select(el => el.DomainId).ToList());
+        IsLoading = false;
+        foreach (var kvp in resultData)
+        {
+            var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == kvp.Key);
+            if (favoriteDomain != null)
+            {
+                SetExtraColumnValue(favoriteDomain, "YT Search", kvp.Value.ToString());
+            }
+        }
+        _appSettings.FavoriteDomains = favoriteDomainItems;
+        await ConfigurationService.SaveFilterSettings(_appSettings);
+    }
+
+
     private async Task FetchData()
     {
         IsLoading = true;
         var resultData = await _dataForCeoApiService.FetchWhoisData(favoriteDomainItems.Select(el => el.DomainId).ToList());
         IsLoading = false;
-        if (resultData.IsError())
-        {
-            NotificationMessageService.ShowWarningMessage(resultData.GetErrorMessage());
-            return;
-        }
-        var task = resultData.Tasks.FirstOrDefault();
-        if (task == null)
-        {
-            NotificationMessageService.ShowWarningMessage($"Task not found.");
-            return;
-        }
-        var result = task.Result.FirstOrDefault();
-        if (result == null)
-        {
-            NotificationMessageService.ShowWarningMessage($"Task.Result not found.");
-            return;
-        }
-        _extraColumns.Clear();
-        foreach (var item in result.Items)
+
+        //_extraColumns.Clear();
+        foreach (var item in resultData)
         {
             var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == item.Domain);
-            //var favoriteDomain = favoriteDomainItems.FirstOrDefault();
             if (favoriteDomain != null)
             {
                 SetExtraColumnValue(favoriteDomain, nameof(item.UpdatedDateTime), item.UpdatedDateTime.ToString("G"));
@@ -116,6 +118,7 @@
         }
         _appSettings.FavoriteDomains = favoriteDomainItems;
         await ConfigurationService.SaveFilterSettings(_appSettings);
+
     }
 
     private void PopulateExtraColumns<TModel>(TModel source, FavoritesDomainItem domainItem)
