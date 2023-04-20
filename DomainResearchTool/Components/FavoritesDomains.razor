@@ -156,7 +156,7 @@
 
     private void LoadFavoriteDomains()
     {
-        favoriteDomainItems = _appSettings.FavoriteDomains;
+        favoriteDomainItems = _appSettings.FavoriteDomains.Where(el => el.Particles != null).ToList();
         if (favoriteDomainItems.FirstOrDefault() != null)
         {
             _extraColumns = favoriteDomainItems.FirstOrDefault().ExtraColumns.Keys.ToList();
@@ -187,7 +187,7 @@
 
     private async void OnDomainAddedToFavorites(DomainItem favDomainItem)
     {
-        await AddItemToFavoritesList((FavoritesDomainItem)favDomainItem);
+        await AddItemToFavoritesList(new FavoritesDomainItem(favDomainItem));
     }
 
     private async void ClearFavoriteDomainsList()
@@ -222,21 +222,29 @@
 
     private async Task PasteToFavoriteList()
     {
-        string domainName = (string)Clipboard.GetData(DataFormats.Text);
-        if (!DomainUtils.IsDomainValid(domainName))
+        string domainNames = (string)Clipboard.GetData(DataFormats.Text);
+        if (!string.IsNullOrWhiteSpace(domainNames))
         {
-            NotificationMessageService.ShowWarningMessage($"Invalid domain '{domainName}'");
-        }
-        else
-        {
-            var particles = FilterService.Instance.FilterDomain(domainName, _appSettings.OperatorType);
-            var domainFromClipboard = new FavoritesDomainItem()
+            var domainsToPaste = domainNames.Replace("\r\n", "\n").Split("\n");
+            foreach (var domainName in domainsToPaste)
+            {
+                if (!DomainUtils.IsDomainValid(domainName))
                 {
-                    DomainId = domainName,
-                    ManuallyAdded = true,
-                    Particles = particles
-                };
-            await AddItemToFavoritesList(domainFromClipboard);
+                    NotificationMessageService.ShowWarningMessage($"Invalid domain '{domainName}', skipped!");
+                }
+                else
+                {
+                    var particles = FilterService.Instance.FilterDomain(domainName, _appSettings.OperatorType);
+                    var domainFromClipboard = new FavoritesDomainItem()
+                        {
+                            DomainId = domainName,
+                            ManuallyAdded = true,
+                            Particles = particles ?? new() { new Particle() { Text = domainName, ParticleType = FilterType.None } }
+                        };
+                    await AddItemToFavoritesList(domainFromClipboard);
+                }
+            }
+
         }
     }
 

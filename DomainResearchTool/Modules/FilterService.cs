@@ -154,7 +154,6 @@ namespace DomainResearchTool.Modules
                 }
                 return null;
             }
-            
         }
 
         private string GetMarker(int wordNum)

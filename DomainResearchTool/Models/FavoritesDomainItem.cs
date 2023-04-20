@@ -6,6 +6,18 @@ namespace DomainResearchTool.Models
     {
         public Dictionary<string, string> ExtraColumns = new Dictionary<string, string>();
 
+        
+        public FavoritesDomainItem()
+        {
+            this.Particles = new List<Particle>();
+        }
+
+        public FavoritesDomainItem(DomainItem domainItem)
+        {
+            this.DomainId = domainItem.DomainId;
+            this.Particles = domainItem.Particles;
+        }
+        
         public new string ToFormatedString()
         {
             return string.Join(",", new List<string>() { DomainId }.Concat(ExtraColumns.Values));
