@@ -2,7 +2,7 @@
 
 namespace DomainResearchTool.Models.DataForSeo
 {
-    public class TaskResultItemResponse
+    public class WhoisTaskResultItemResponse : BaseTaskResultItemResponse
     {
         [JsonProperty("domain")]
         public string Domain { get; set; } = string.Empty;

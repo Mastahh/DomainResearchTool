@@ -2,7 +2,9 @@
 
 namespace DomainResearchTool.Models.DataForSeo
 {
-    public class TaskResponse
+    public class BaseTaskResponse<TTaskResultResponse, TItemResponseModel>
+        where TItemResponseModel : BaseTaskResultItemResponse
+        where TTaskResultResponse : BaseTaskResultResponse<TItemResponseModel>
     {
         [JsonProperty("id")]
         public string Id { get; set; } = string.Empty;
@@ -14,6 +16,6 @@ namespace DomainResearchTool.Models.DataForSeo
         public string StatusMessage { get; set; } = string.Empty;
 
         [JsonProperty("result")]
-        public List<TaskResultResponse> Result { get; set; } = new List<TaskResultResponse>();
+        public List<TTaskResultResponse> Result { get; set; } = new List<TTaskResultResponse>();
     }
 }

@@ -29,20 +29,23 @@ namespace DomainResearchTool.Modules
             return request;
         }
 
-        public async Task<List<TaskResultItemResponse>> FetchWhoisData(List<string> domains)
+        public async Task<List<WhoisTaskResultItemResponse>> FetchWhoisData(List<string> domains)
         {
-            List<TaskResultItemResponse> resultData = new();
+            List<WhoisTaskResultItemResponse> resultData = new();
             if (domains != null && domains.Any())
             {
                 var bodyRequest = new DomainWhoisOverviewRequest();
+                List<object> filters = new List<object>();
                 foreach (var domain in domains)
                 {
-                    if (bodyRequest.Filters.Any())
+                    if (filters.Any())
                     {
-                        bodyRequest.Filters.Add("or");
+                        filters.Add("or");
                     }
-                    bodyRequest.Filters.Add(new string[] { "domain", "=", domain });
+                    filters.Add(new string[] { "domain", "=", domain });
                 }
+
+                bodyRequest.SetFilters(filters);
 
                 DomainWhoisOverviewResponse responseData = null;
                 using (var client = CreateRestClient())
@@ -88,49 +91,42 @@ namespace DomainResearchTool.Modules
                         var response = await client.ExecuteAsync(request);
                         if (!string.IsNullOrWhiteSpace(response.Content))
                         {
-                            var responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
+                            var responseData = JsonConvert.DeserializeObject<SERPResponse>(response.Content);
                             if (ValidateResponse(responseData))
                             {
-                                resultData.Add(domainName, 0);
-                            }
-                            else
-                            {
-                                NotificationMessageService.ShowWarningMessage(responseData.GetErrorMessage());
-                                break;
+                                resultData.Add(domainName, responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().SeResultsCount);
                             }
                         }
                     }
-                    break;
                 }
             }
             return resultData;
         }
 
-        private bool ValidateResponse(BaseResponse response)
+        private bool ValidateResponse(IBaseResponse response)
         {
-            if (response != null)
+            if (response == null)
             {
-                if (response.IsError())
-                {
-                    NotificationMessageService.ShowWarningMessage(response.GetErrorMessage());
-                    return false;
-                }
-                var task = response.Tasks.FirstOrDefault();
-                if (task == null)
-                {
-                    NotificationMessageService.ShowWarningMessage($"Task not found.");
-                    return false;
-                }
-                var result = task.Result.FirstOrDefault();
-                if (result == null)
-                {
-                    NotificationMessageService.ShowWarningMessage($"Task.Result not found.");
-                    return false;
-                }
-                return true;
+                NotificationMessageService.ShowWarningMessage("Response is null");
+                return false;
             }
-            NotificationMessageService.ShowWarningMessage("Response is null");
-            return false;
+            if (response.IsError())
+            {
+                NotificationMessageService.ShowWarningMessage(response.GetErrorMessage());
+                return false;
+            }
+            if (!response.HasAnyTasks())
+            {
+                NotificationMessageService.ShowWarningMessage($"Task not found.");
+                return false;
+            }
+            if (!response.HasAnyResultInTask())
+            {
+                NotificationMessageService.ShowWarningMessage($"Task.Result not found.");
+                return false;
+            }
+            return true;
+
         }
     }
 }

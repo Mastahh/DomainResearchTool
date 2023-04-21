@@ -2,8 +2,21 @@
 
 namespace DomainResearchTool.Models.DataForSeo
 {
-    public class BaseResponse
+    public interface IBaseResponse
     {
+        bool IsError();
+        string GetErrorMessage();
+        bool HasAnyTasks();
+        bool HasAnyResultInTask();
+    }
+
+    public class BaseResponse<TTaskResponse, TTaskResultResponse, TItemResponseModel> : IBaseResponse
+        where TTaskResponse: BaseTaskResponse<TTaskResultResponse, TItemResponseModel>
+        where TTaskResultResponse: BaseTaskResultResponse<TItemResponseModel>
+        where TItemResponseModel : BaseTaskResultItemResponse
+    {
+        protected const int _api_internal_error = 40000;
+
         [JsonProperty("version")]
         public string Version { get; set; } = string.Empty;
 
@@ -14,18 +27,18 @@ namespace DomainResearchTool.Models.DataForSeo
         public string StatusMessage { get; set; } = string.Empty;
 
         [JsonProperty("tasks")]
-        public List<TaskResponse> Tasks { get; set; }
+        public List<TTaskResponse> Tasks { get; set; }
 
         public bool IsError()
         {
-            if (StatusCode >= 40000)
+            if (StatusCode >= _api_internal_error)
             {
                 return true;
             }
             if (Tasks != null)
             {
                 var task = Tasks.FirstOrDefault();
-                if (task != null && task.StatusCode >= 40000)
+                if (task != null && task.StatusCode >= _api_internal_error)
                 {
                     return true;
                 }
@@ -33,9 +46,9 @@ namespace DomainResearchTool.Models.DataForSeo
             return false;
         }
 
-        public virtual string GetErrorMessage()
+        public string GetErrorMessage()
         {
-            if (!string.IsNullOrWhiteSpace(StatusMessage))
+            if (StatusCode >= _api_internal_error && !string.IsNullOrWhiteSpace(StatusMessage))
             {
                 return StatusMessage;
             }
@@ -48,6 +61,20 @@ namespace DomainResearchTool.Models.DataForSeo
                 }
             }
             return string.Empty;
+        }
+
+        public bool HasAnyTasks()
+        {
+            return Tasks.FirstOrDefault() != null;
+        }
+
+        public bool HasAnyResultInTask()
+        {
+            if (HasAnyTasks())
+            {
+                return Tasks.FirstOrDefault().Result.FirstOrDefault() != null;
+            }
+            return false;
         }
     }
 }

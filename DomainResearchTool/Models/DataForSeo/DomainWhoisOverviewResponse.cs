@@ -1,8 +1,6 @@
-﻿using Newtonsoft.Json;
-
-namespace DomainResearchTool.Models.DataForSeo
+﻿namespace DomainResearchTool.Models.DataForSeo
 {
-    public class DomainWhoisOverviewResponse : BaseResponse
+    public class DomainWhoisOverviewResponse: BaseResponse<WhoisTaskResponse,WhoisTaskResultResponse, WhoisTaskResultItemResponse>
     {
 
     }
