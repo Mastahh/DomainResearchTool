@@ -3,6 +3,8 @@ using DomainResearchTool.Models;
 using DomainResearchTool.Models.DataForSeo;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
+using System.Collections.Concurrent;
+using System.Linq;
 
 namespace DomainResearchTool.Modules
 {
@@ -32,43 +34,37 @@ namespace DomainResearchTool.Modules
         public async Task<List<WhoisTaskResultItemResponse>> FetchWhoisData(List<string> domains)
         {
             List<WhoisTaskResultItemResponse> resultData = new();
-            try
+
+            if (domains != null && domains.Any())
             {
-                if (domains != null && domains.Any())
+                var bodyRequest = new DomainWhoisOverviewRequest();
+                List<object> filters = new List<object>();
+                foreach (var domain in domains)
                 {
-                    var bodyRequest = new DomainWhoisOverviewRequest();
-                    List<object> filters = new List<object>();
-                    foreach (var domain in domains)
+                    if (filters.Any())
                     {
-                        if (filters.Any())
-                        {
-                            filters.Add("or");
-                        }
-                        filters.Add(new string[] { "domain", "=", domain });
+                        filters.Add("or");
                     }
+                    filters.Add(new string[] { "domain", "=", domain });
+                }
 
-                    bodyRequest.SetFilters(filters);
+                bodyRequest.SetFilters(filters);
 
-                    DomainWhoisOverviewResponse responseData = null;
-                    using (var client = CreateRestClient())
+                DomainWhoisOverviewResponse responseData = null;
+                using (var client = CreateRestClient())
+                {
+                    var request = CreateRequest(ApiMethods.DomainAnalytics_Whois_Overview_Live);
+                    request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
+                    var response = await client.ExecuteAsync(request);
+                    if (!string.IsNullOrWhiteSpace(response.Content))
                     {
-                        var request = CreateRequest(ApiMethods.DomainAnalytics_Whois_Overview_Live);
-                        request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
-                        var response = await client.ExecuteAsync(request);
-                        if (!string.IsNullOrWhiteSpace(response.Content))
-                        {
-                            responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
-                        }
-                    }
-                    if (ValidateResponse(responseData))
-                    {
-                        resultData = responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().Items;
+                        responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                NotificationMessageService.ShowErrorMessage(ex.Message);
+                if (IsValidatResponse(responseData))
+                {
+                    resultData = responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().Items;
+                }
             }
 
             return resultData;
@@ -76,10 +72,11 @@ namespace DomainResearchTool.Modules
 
         public async Task<Dictionary<string, int>> FetchYoutubeData(List<string> domains)
         {
-            Dictionary<string, int> resultData = new Dictionary<string, int>();
-            try
+            ConcurrentDictionary<string, int> resultData = new ConcurrentDictionary<string, int>();
+
+            if (domains != null && domains.Any())
             {
-                if (domains != null && domains.Any())
+                await Parallel.ForEachAsync(domains, new ParallelOptions() { MaxDegreeOfParallelism = 10 }, async (domainName, _) =>
                 {
                     var bodyRequest = new SERPRequest()
                     {
@@ -89,58 +86,42 @@ namespace DomainResearchTool.Modules
                         Os = "Windows",
                         BlockDepth = 10
                     };
-                    foreach (var domainName in domains)
-                    {
-                        bodyRequest.Keyword = $"\"{domainName}\"";
+                    bodyRequest.Keyword = $"\"{domainName}\"";
 
-                        using (var client = CreateRestClient())
+                    using (var client = CreateRestClient())
+                    {
+                        var request = CreateRequest(ApiMethods.SERP_Youtube);
+                        request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
+                        var response = await client.ExecuteAsync(request);
+                        if (!string.IsNullOrWhiteSpace(response.Content))
                         {
-                            var request = CreateRequest(ApiMethods.SERP_Youtube);
-                            request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
-                            var response = await client.ExecuteAsync(request);
-                            if (!string.IsNullOrWhiteSpace(response.Content))
+                            var responseData = JsonConvert.DeserializeObject<SERPResponse>(response.Content);
+                            if (IsValidatResponse(responseData))
                             {
-                                var responseData = JsonConvert.DeserializeObject<SERPResponse>(response.Content);
-                                if (ValidateResponse(responseData))
-                                {
-                                    resultData.Add(domainName, responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().SeResultsCount);
-                                }
+                                resultData.TryAdd(domainName, responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().SeResultsCount);
                             }
                         }
                     }
+
+                });
+                /*
+                foreach (var domainName in domains)
+                {
+                    
                 }
+                */
             }
-            catch (Exception ex)
-            {
-                NotificationMessageService.ShowErrorMessage(ex.Message);
-            }
-            return resultData;
+
+            return resultData.ToDictionary(entry => entry.Key, entry => entry.Value);
         }
 
-        private bool ValidateResponse(IBaseResponse response)
+        private bool IsValidatResponse(IBaseResponse response)
         {
-            if (response == null)
+            if (response == null || response.IsError() || !response.HasAnyTasks() || !response.HasAnyResultInTask())
             {
-                NotificationMessageService.ShowWarningMessage("Response is null");
-                return false;
-            }
-            if (response.IsError())
-            {
-                NotificationMessageService.ShowWarningMessage(response.GetErrorMessage());
-                return false;
-            }
-            if (!response.HasAnyTasks())
-            {
-                NotificationMessageService.ShowWarningMessage($"Task not found.");
-                return false;
-            }
-            if (!response.HasAnyResultInTask())
-            {
-                NotificationMessageService.ShowWarningMessage($"Task.Result not found.");
                 return false;
             }
             return true;
-
         }
     }
 }

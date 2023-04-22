@@ -82,43 +82,71 @@
     private async Task YoutubeSearch()
     {
         IsLoading = true;
-        var resultData = await _dataForCeoApiService.FetchYoutubeData(favoriteDomainItems.Select(el => el.DomainId).ToList());
-        IsLoading = false;
-        foreach (var kvp in resultData)
+        try
         {
-            var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == kvp.Key);
-            if (favoriteDomain != null)
+            var domainsToQuery = favoriteDomainItems.Select(el => el.DomainId).ToList();
+            var resultData = await _dataForCeoApiService.FetchYoutubeData(domainsToQuery);
+            foreach (var domain in domainsToQuery)
             {
-                SetExtraColumnValue(favoriteDomain, "YT Search", kvp.Value.ToString());
+                var value = "0";
+                var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == domain);
+                if (resultData.ContainsKey(domain))
+                {
+                    value = resultData[domain].ToString();
+                }
+                if (favoriteDomain != null)
+                {
+                    SetExtraColumnValue(favoriteDomain, "YT Search", value);
+                }
             }
+            _appSettings.FavoriteDomains = favoriteDomainItems;
+            await ConfigurationService.SaveFilterSettings(_appSettings);
         }
-        _appSettings.FavoriteDomains = favoriteDomainItems;
-        await ConfigurationService.SaveFilterSettings(_appSettings);
+        catch (Exception ex)
+        {
+            NotificationMessageService.ShowErrorMessage(ex.Message);
+        }
+        IsLoading = false;
+
     }
 
 
     private async Task FetchData()
     {
         IsLoading = true;
-        var resultData = await _dataForCeoApiService.FetchWhoisData(favoriteDomainItems.Select(el => el.DomainId).ToList());
-        IsLoading = false;
-
-        //_extraColumns.Clear();
-        foreach (var item in resultData)
+        try
         {
-            var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == item.Domain);
-            if (favoriteDomain != null)
+            var domainsToQuery = favoriteDomainItems.Select(el => el.DomainId).ToList();
+            var resultData = await _dataForCeoApiService.FetchWhoisData(domainsToQuery);
+            var emptyMetric = new Metric();
+            var emptyBacklinkInfo = new TaskBacklinksInfo();
+            foreach (var domain in domainsToQuery)
             {
-                SetExtraColumnValue(favoriteDomain, nameof(item.UpdatedDateTime), item.UpdatedDateTime.ToString("G"));
+                var favoriteDomain = favoriteDomainItems.FirstOrDefault(el => el.DomainId == domain);
+                var itemResult = resultData.FirstOrDefault(el => el.Domain == domain);
+                if (itemResult != null)
+                {
+                    SetExtraColumnValue(favoriteDomain, nameof(WhoisTaskResultItemResponse.UpdatedDateTime), itemResult.UpdatedDateTime.ToString("G"));
 
-                PopulateExtraColumns(item.Metrics.Organic, favoriteDomain);
+                    PopulateExtraColumns(itemResult.Metrics.Organic, favoriteDomain);
 
-                PopulateExtraColumns(item.BacklinksInfo, favoriteDomain);
+                    PopulateExtraColumns(itemResult.BacklinksInfo, favoriteDomain);
+                }
+                else
+                {
+                    SetExtraColumnValue(favoriteDomain, nameof(WhoisTaskResultItemResponse.UpdatedDateTime), string.Empty);
+                    PopulateExtraColumns(emptyMetric, favoriteDomain);
+                    PopulateExtraColumns(emptyBacklinkInfo, favoriteDomain);
+                }
             }
+            _appSettings.FavoriteDomains = favoriteDomainItems;
+            await ConfigurationService.SaveFilterSettings(_appSettings);
         }
-        _appSettings.FavoriteDomains = favoriteDomainItems;
-        await ConfigurationService.SaveFilterSettings(_appSettings);
-
+        catch (Exception ex)
+        {
+            NotificationMessageService.ShowErrorMessage(ex.Message);
+        }
+        IsLoading = false;
     }
 
     private void PopulateExtraColumns<TModel>(TModel source, FavoritesDomainItem domainItem)
@@ -128,6 +156,10 @@
             foreach (var property in source.GetType().GetProperties())
             {
                 var value = property.GetValue(source);
+                if (property.PropertyType == typeof(DateTime) && (DateTime)value == DateTime.MinValue)
+                {
+                    value = "";
+                }
                 SetExtraColumnValue(domainItem, property.Name, value == null ? "0" : value.ToString());
             }
         }
