@@ -8,7 +8,7 @@ namespace DomainResearchTool.Modules
         private static OpenFileDialog openFileDialog = new OpenFileDialog();
         private static SaveFileDialog saveFileDialog = new SaveFileDialog();
 
-        public static async Task<List<string>> OpenFile(string title="")
+        public static async Task<List<string>> OpenFile(string title = "")
         {
             openFileDialog.Title = title;
             openFileDialog.AddExtension = true;
@@ -51,7 +51,7 @@ namespace DomainResearchTool.Modules
             {
                 List<string> result = new List<string>();
                 var fileData = await File.ReadAllLinesAsync(filePath);
-                foreach ( var line in fileData)
+                foreach (var line in fileData)
                 {
                     result.AddRange(line.Split(',', StringSplitOptions.RemoveEmptyEntries).Skip(1));
                 }
@@ -77,23 +77,29 @@ namespace DomainResearchTool.Modules
 
         public static async Task SaveDomains(IEnumerable<IDomainItem> domainItems)
         {
-            saveFileDialog.DefaultExt = "*.txt";
-            saveFileDialog.Filter = openFileDialog.Filter = "Text files (*.txt)|*.txt";
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            if (domainItems != null && domainItems.Any())
             {
-                var targetFile = saveFileDialog.FileName;
-                try
+                saveFileDialog.DefaultExt = "*.csv";
+                saveFileDialog.Filter = "CSV (*.csv)|*.csv";
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    var domainToSave = domainItems.Select(el => el.ToFormatedString());
-                    await File.WriteAllLinesAsync(targetFile, domainToSave);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("CAnnot save to file.\r\n" + ex.Message, "Error", MessageBoxButtons.OKCancel);
-                }
+                    var targetFile = saveFileDialog.FileName;
+                    try
+                    {
+                        List<string> dataToSave = new List<string>();
+                        dataToSave.Add(domainItems.FirstOrDefault().GetColumns());
+                        var domainToSave = domainItems.Select(el => el.ToFormatedString()).ToList();
+                        dataToSave.AddRange(domainToSave);
 
+                        await File.WriteAllLinesAsync(targetFile, dataToSave);
+                    }
+                    catch (Exception ex)
+                    {
+                        NotificationMessageService.ShowErrorMessage("Cannot save to file.\r\n" + ex.Message);
+                    }
+                }
             }
-                
+
         }
     }
 }

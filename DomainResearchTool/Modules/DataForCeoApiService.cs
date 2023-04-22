@@ -32,36 +32,43 @@ namespace DomainResearchTool.Modules
         public async Task<List<WhoisTaskResultItemResponse>> FetchWhoisData(List<string> domains)
         {
             List<WhoisTaskResultItemResponse> resultData = new();
-            if (domains != null && domains.Any())
+            try
             {
-                var bodyRequest = new DomainWhoisOverviewRequest();
-                List<object> filters = new List<object>();
-                foreach (var domain in domains)
+                if (domains != null && domains.Any())
                 {
-                    if (filters.Any())
+                    var bodyRequest = new DomainWhoisOverviewRequest();
+                    List<object> filters = new List<object>();
+                    foreach (var domain in domains)
                     {
-                        filters.Add("or");
+                        if (filters.Any())
+                        {
+                            filters.Add("or");
+                        }
+                        filters.Add(new string[] { "domain", "=", domain });
                     }
-                    filters.Add(new string[] { "domain", "=", domain });
-                }
 
-                bodyRequest.SetFilters(filters);
+                    bodyRequest.SetFilters(filters);
 
-                DomainWhoisOverviewResponse responseData = null;
-                using (var client = CreateRestClient())
-                {
-                    var request = CreateRequest(ApiMethods.DomainAnalytics_Whois_Overview_Live);
-                    request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
-                    var response = await client.ExecuteAsync(request);
-                    if (!string.IsNullOrWhiteSpace(response.Content))
+                    DomainWhoisOverviewResponse responseData = null;
+                    using (var client = CreateRestClient())
                     {
-                        responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
+                        var request = CreateRequest(ApiMethods.DomainAnalytics_Whois_Overview_Live);
+                        request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
+                        var response = await client.ExecuteAsync(request);
+                        if (!string.IsNullOrWhiteSpace(response.Content))
+                        {
+                            responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
+                        }
+                    }
+                    if (ValidateResponse(responseData))
+                    {
+                        resultData = responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().Items;
                     }
                 }
-                if (ValidateResponse(responseData))
-                {
-                    resultData = responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().Items;
-                }
+            }
+            catch (Exception ex)
+            {
+                NotificationMessageService.ShowErrorMessage(ex.Message);
             }
 
             return resultData;
@@ -70,35 +77,42 @@ namespace DomainResearchTool.Modules
         public async Task<Dictionary<string, int>> FetchYoutubeData(List<string> domains)
         {
             Dictionary<string, int> resultData = new Dictionary<string, int>();
-            if (domains != null && domains.Any())
+            try
             {
-                var bodyRequest = new SERPRequest()
+                if (domains != null && domains.Any())
                 {
-                    LocationCode = 2840,//United Stated, See CSV for more https://docs.dataforseo.com/v3/serp/youtube/locations/
-                    LanguageCode = "en",
-                    Device = "desktop",
-                    Os = "Windows",
-                    BlockDepth = 10
-                };
-                foreach (var domainName in domains)
-                {
-                    bodyRequest.Keyword = $"\"{domainName}\"";
-
-                    using (var client = CreateRestClient())
+                    var bodyRequest = new SERPRequest()
                     {
-                        var request = CreateRequest(ApiMethods.SERP_Youtube);
-                        request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
-                        var response = await client.ExecuteAsync(request);
-                        if (!string.IsNullOrWhiteSpace(response.Content))
+                        LocationCode = 2840,//United Stated, See CSV for more https://docs.dataforseo.com/v3/serp/youtube/locations/
+                        LanguageCode = "en",
+                        Device = "desktop",
+                        Os = "Windows",
+                        BlockDepth = 10
+                    };
+                    foreach (var domainName in domains)
+                    {
+                        bodyRequest.Keyword = $"\"{domainName}\"";
+
+                        using (var client = CreateRestClient())
                         {
-                            var responseData = JsonConvert.DeserializeObject<SERPResponse>(response.Content);
-                            if (ValidateResponse(responseData))
+                            var request = CreateRequest(ApiMethods.SERP_Youtube);
+                            request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
+                            var response = await client.ExecuteAsync(request);
+                            if (!string.IsNullOrWhiteSpace(response.Content))
                             {
-                                resultData.Add(domainName, responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().SeResultsCount);
+                                var responseData = JsonConvert.DeserializeObject<SERPResponse>(response.Content);
+                                if (ValidateResponse(responseData))
+                                {
+                                    resultData.Add(domainName, responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().SeResultsCount);
+                                }
                             }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                NotificationMessageService.ShowErrorMessage(ex.Message);
             }
             return resultData;
         }

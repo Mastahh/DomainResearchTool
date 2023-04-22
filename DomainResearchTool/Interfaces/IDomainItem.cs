@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DomainResearchTool.Interfaces
+﻿namespace DomainResearchTool.Interfaces
 {
     public interface IDomainItem
     {
-        string ToFormatedString();
+        string GetColumns(string separator = ",");
+        string ToFormatedString(string separator = ",");
     }
 }

@@ -17,10 +17,14 @@ namespace DomainResearchTool.Models
             this.DomainId = domainItem.DomainId;
             this.Particles = domainItem.Particles;
         }
-        
-        public new string ToFormatedString()
+        public string GetColumns(string separator = ",")
         {
-            return string.Join(",", new List<string>() { DomainId }.Concat(ExtraColumns.Values));
+            return string.Join(separator, new List<string>() { nameof(DomainId) }.Concat(ExtraColumns.Keys));
+        }
+        
+        public string ToFormatedString(string separator = ",")
+        {
+            return string.Join(separator, new List<string>() { DomainId }.Concat(ExtraColumns.Values));
         }
 
         public void SetExtraColumnValue(string key, string value)

@@ -14,9 +14,14 @@ namespace DomainResearchTool.Models
         public string DomainId { get; set; } = "";
         public List<Particle> Particles { get; set; }
 
-        public string ToFormatedString()
+        public string GetColumns(string separator = ",")
         {
-            return string.Join("", Particles.Select(p => p.Text));
+            return string.Join(separator, nameof(Particles));
+        }
+
+        public string ToFormatedString(string separator = ",")
+        {
+            return string.Join(separator, Particles.Select(p => p.Text));
         }
     }
 }
