@@ -16,6 +16,7 @@ namespace DomainResearchTool.Modules
 
     public class DataForCeoApiService
     {
+        private const int _whois_max_domains = 8;
         public ApiSettings GetApiSettings { get { return ConfigurationService.GetApiSettings(); } }
 
         private RestClient CreateRestClient()
@@ -33,41 +34,50 @@ namespace DomainResearchTool.Modules
 
         public async Task<List<WhoisTaskResultItemResponse>> FetchWhoisData(List<string> domains)
         {
-            List<WhoisTaskResultItemResponse> resultData = new();
+            ConcurrentBag<WhoisTaskResultItemResponse> resultData = new ConcurrentBag<WhoisTaskResultItemResponse>();
 
             if (domains != null && domains.Any())
             {
-                var bodyRequest = new DomainWhoisOverviewRequest();
-                List<object> filters = new List<object>();
-                foreach (var domain in domains)
+                int page = 0;
+                var domainsBatch = domains.Skip(_whois_max_domains * page).Take(_whois_max_domains);
+                do
                 {
-                    if (filters.Any())
+                    page++;
+                    var bodyRequest = new DomainWhoisOverviewRequest();
+                    List<object> filters = new List<object>();
+                    foreach (var domain in domainsBatch)
                     {
-                        filters.Add("or");
+                        if (filters.Any())
+                        {
+                            filters.Add("or");
+                        }
+                        filters.Add(new string[] { "domain", "=", domain });
                     }
-                    filters.Add(new string[] { "domain", "=", domain });
-                }
 
-                bodyRequest.SetFilters(filters);
+                    bodyRequest.SetFilters(filters);
 
-                DomainWhoisOverviewResponse responseData = null;
-                using (var client = CreateRestClient())
-                {
-                    var request = CreateRequest(ApiMethods.DomainAnalytics_Whois_Overview_Live);
-                    request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
-                    var response = await client.ExecuteAsync(request);
-                    if (!string.IsNullOrWhiteSpace(response.Content))
+                    DomainWhoisOverviewResponse responseData = null;
+                    using (var client = CreateRestClient())
                     {
-                        responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
+                        var request = CreateRequest(ApiMethods.DomainAnalytics_Whois_Overview_Live);
+                        request.AddJsonBody(new object[] { bodyRequest }, ContentType.Json);
+                        var response = await client.ExecuteAsync(request);
+                        if (!string.IsNullOrWhiteSpace(response.Content))
+                        {
+                            responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
+                        }
                     }
+                    if (IsValidatResponse(responseData))
+                    {
+                        responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().Items.ForEach(resultData.Add);
+                    }
+                    domainsBatch = domains.Skip(_whois_max_domains * page).Take(_whois_max_domains);
                 }
-                if (IsValidatResponse(responseData))
-                {
-                    resultData = responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().Items;
-                }
+                while (domainsBatch.Any());
+               
             }
 
-            return resultData;
+            return resultData.ToList();
         }
 
         public async Task<Dictionary<string, int>> FetchYoutubeData(List<string> domains)
@@ -104,12 +114,6 @@ namespace DomainResearchTool.Modules
                     }
 
                 });
-                /*
-                foreach (var domainName in domains)
-                {
-                    
-                }
-                */
             }
 
             return resultData.ToDictionary(entry => entry.Key, entry => entry.Value);

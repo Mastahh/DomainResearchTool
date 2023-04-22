@@ -314,7 +314,7 @@
             Controls.Add(mainGrids);
             MinimumSize = new Size(804, 435);
             Name = "MainForm";
-            Text = "Domain Research Tool v0.8";
+            Text = "Domain Research Tool v0.9";
             gbHighlight.ResumeLayout(false);
             gbHighlight.PerformLayout();
             tableLayoutPanel1.ResumeLayout(false);
