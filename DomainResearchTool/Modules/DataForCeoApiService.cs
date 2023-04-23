@@ -16,6 +16,11 @@ namespace DomainResearchTool.Modules
 
     public class DataForCeoApiService
     {
+        private JsonSerializerSettings _default_serialize_settings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            MissingMemberHandling = MissingMemberHandling.Ignore
+        };
         private const int _whois_max_domains = 8;
         public ApiSettings GetApiSettings { get { return ConfigurationService.GetApiSettings(); } }
 
@@ -64,7 +69,7 @@ namespace DomainResearchTool.Modules
                         var response = await client.ExecuteAsync(request);
                         if (!string.IsNullOrWhiteSpace(response.Content))
                         {
-                            responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content);
+                            responseData = JsonConvert.DeserializeObject<DomainWhoisOverviewResponse>(response.Content, _default_serialize_settings);
                         }
                     }
                     if (IsValidatResponse(responseData))
@@ -105,7 +110,7 @@ namespace DomainResearchTool.Modules
                         var response = await client.ExecuteAsync(request);
                         if (!string.IsNullOrWhiteSpace(response.Content))
                         {
-                            var responseData = JsonConvert.DeserializeObject<SERPResponse>(response.Content);
+                            var responseData = JsonConvert.DeserializeObject<SERPResponse>(response.Content, _default_serialize_settings);
                             if (IsValidatResponse(responseData))
                             {
                                 resultData.TryAdd(domainName, responseData.Tasks.FirstOrDefault().Result.FirstOrDefault().SeResultsCount);
