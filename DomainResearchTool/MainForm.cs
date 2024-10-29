@@ -10,7 +10,8 @@ namespace DomainResearchTool
 {
     public partial class MainForm : Form
     {
-        private AppSettings _appSettings;
+        private AppSettings _appSettings = null!;
+
         public MainForm()
         {
             InitializeComponent();

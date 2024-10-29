@@ -72,7 +72,7 @@ namespace DomainResearchTool.Models.DataForSeo
         {
             if (HasAnyTasks())
             {
-                return Tasks.FirstOrDefault().Result.FirstOrDefault() != null;
+                return Tasks.FirstOrDefault()!.Result.FirstOrDefault() != null;
             }
             return false;
         }
